@@ -1,11 +1,10 @@
-from collections import namedtuple
-
-# -*- coding: utf-8 -*-
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.nn.init as init
+import torch.nn.functional as F
+
 from torchvision import models
+from collections import namedtuple
 from torchvision.models.vgg import model_urls
 
 
@@ -43,10 +42,11 @@ class vgg16_bn(torch.nn.Module):
             self.slice4.add_module(str(x), vgg_pretrained_features[x])
 
         # fc6, fc7 without atrous conv
-        self.slice5 = torch.nn.Sequential(nn.MaxPool2d(kernel_size=3, stride=1, padding=1),
-                                          nn.Conv2d(in_channels=512, out_channels=1024, kernel_size=3,
-                                                    padding=6, dilation=6),
-                                          nn.Conv2d(in_channels=1024, out_channels=1024, kernel_size=1))
+        self.slice5 = torch.nn.Sequential(
+            nn.MaxPool2d(kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(in_channels=512, out_channels=1024, kernel_size=3, padding=6, dilation=6),
+            nn.Conv2d(in_channels=1024, out_channels=1024, kernel_size=1)
+        )
 
         if not pretrained:
             init_weights(self.slice1.modules())
@@ -80,16 +80,23 @@ class vgg16_bn(torch.nn.Module):
 class double_conv(nn.Module):
     def __init__(self, in_channels, mid_channels, out_channels):
         super(double_conv, self).__init__()
-        self.conv = nn.Sequential(nn.Conv2d(in_channels=in_channels + mid_channels,
-                                            out_channels=mid_channels,
-                                            kernel_size=1),
-                                  nn.BatchNorm2d(num_features=mid_channels),
-                                  nn.ReLU(inplace=True),
-                                  nn.Conv2d(in_channels=mid_channels,
-                                            out_channels=out_channels,
-                                            kernel_size=3, padding=1),
-                                  nn.BatchNorm2d(num_features=out_channels),
-                                  nn.ReLU(inplace=True))
+        self.conv = nn.Sequential(
+            nn.Conv2d(
+                in_channels=in_channels + mid_channels,
+                out_channels=mid_channels,
+                kernel_size=1
+            ),
+            nn.BatchNorm2d(num_features=mid_channels),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(
+                in_channels=mid_channels,
+                out_channels=out_channels,
+                kernel_size=3,
+                padding=1
+            ),
+            nn.BatchNorm2d(num_features=out_channels),
+            nn.ReLU(inplace=True)
+        )
 
     def forward(self, x):
         x = self.conv(x)
@@ -110,15 +117,17 @@ class CRAFT(nn.Module):
         self.upconv4 = double_conv(in_channels=128, mid_channels=64, out_channels=32)
 
         num_classes = 2
-        self.conv_cls = nn.Sequential(nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, padding=1),
-                                      nn.ReLU(inplace=True),
-                                      nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, padding=1),
-                                      nn.ReLU(inplace=True),
-                                      nn.Conv2d(in_channels=32, out_channels=16, kernel_size=3, padding=1),
-                                      nn.ReLU(inplace=True),
-                                      nn.Conv2d(in_channels=16, out_channels=16, kernel_size=1),
-                                      nn.ReLU(inplace=True),
-                                      nn.Conv2d(in_channels=16, out_channels=num_classes, kernel_size=1))
+        self.conv_cls = nn.Sequential(
+            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(in_channels=32, out_channels=16, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(in_channels=16, out_channels=16, kernel_size=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(in_channels=16, out_channels=num_classes, kernel_size=1)
+        )
 
         init_weights(self.upconv1.modules())
         init_weights(self.upconv2.modules())
