@@ -15,13 +15,27 @@ def icdar2019_to_json(txt_path, image_path, output_dir, delim, text_strip_char=N
         lines = [line.split(delim) for line in lines]
         for i, line in enumerate(lines):
             if len(line) == 5:
-                lines[i] = [int(line[0]), int(line[1]), int(line[2]), int(line[3]), line[4].strip(text_strip_char)]
+                lines[i] = [
+                    int(line[0]), int(line[1]), int(line[2]), int(line[3]),
+                    line[4].strip(text_strip_char)
+                ]
             elif 5 < len(line) < 9:
-                lines[i] = [int(line[0]), int(line[1]), int(line[2]), int(line[3]), (delim.join(line[4:])).strip(text_strip_char)]
+                lines[i] = [
+                    int(line[0]), int(line[1]), int(line[2]), int(line[3]),
+                    (delim.join(line[4:])).strip(text_strip_char)
+                ]
             elif len(line) == 9:
-                lines[i] = [int(line[0]), int(line[1]), int(line[2]), int(line[3]), int(line[4]), int(line[5]), int(line[6]), int(line[7]), line[8].strip(text_strip_char)]
+                lines[i] = [
+                    int(line[0]), int(line[1]), int(line[2]), int(line[3]),
+                    int(line[4]), int(line[5]), int(line[6]), int(line[7]),
+                    line[8].strip(text_strip_char)
+                ]
             elif len(line) > 9:
-                lines[i] = [int(line[0]), int(line[1]), int(line[2]), int(line[3]), int(line[4]), int(line[5]), int(line[6]), int(line[7]), (delim.join(line[8:])).strip(text_strip_char)]
+                lines[i] = [
+                    int(line[0]), int(line[1]), int(line[2]), int(line[3]),
+                    int(line[4]), int(line[5]), int(line[6]), int(line[7]),
+                    (delim.join(line[8:])).strip(text_strip_char)
+                ]
             else:
                 raise RuntimeError(f'{txt_path} Groundtruth formating is not supported.')
 
