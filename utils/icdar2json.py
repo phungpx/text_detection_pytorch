@@ -1,5 +1,4 @@
 import cv2
-import time
 import json
 import natsort
 import argparse
@@ -8,8 +7,7 @@ from tqdm import tqdm
 from pathlib import Path
 
 
-def icdar2019_to_json(txt_path, image_path, output_dir, delim, text_strip_char=None):
-    print(txt_path)
+def icdar_to_json(txt_path, image_path, output_dir, delim, text_strip_char=None):
     with txt_path.open(mode='r', encoding='cp1252') as f:
         lines = [line.strip() for line in f if line.strip()]
         lines = [line.split(delim) for line in lines]
@@ -95,4 +93,4 @@ if __name__ == '__main__':
     assert image_names == txt_names, f'number of image paths {len(image_paths)} - number of txt paths {len(txt_paths)}'
 
     for txt_path, image_path in tqdm(list(zip(txt_paths, image_paths))):
-        icdar2019_to_json(txt_path, image_path, output_dir, args.delim, args.text_strip_char)
+        icdar_to_json(txt_path, image_path, output_dir, args.delim, args.text_strip_char)
