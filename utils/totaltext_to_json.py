@@ -65,6 +65,12 @@ def totaltext_to_json(image_path: Path, label_path: Path, output_dir: Path):
 
 
 if __name__ == '__main__':
+    # USAGE
+    # python utils/totaltext_to_json.py
+    # --image-dir <input/totaltext/Images/Train/>
+    # --label-dir <input/totaltext/Labels/Train/>
+    # --output-dir <output/totaltext/train/>
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--image-dir')
     parser.add_argument('--label-dir')
