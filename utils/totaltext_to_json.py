@@ -1,12 +1,16 @@
 import cv2
 import json
 import argparse
+import numpy as np
 from tqdm import tqdm
 from pathlib import Path
 from natsort import natsorted
+from typing import Tuple, Dict
 
 
-def totaltext_to_json(image_path: Path, label_path: Path, output_dir: Path):
+def totaltext_to_json(
+    image_path: Path, label_path: Path, output_dir: Path
+) -> Tuple[np.ndarray, Dict]:
     image = cv2.imread(str(image_path))
     label_info = label_path.open(mode='r', encoding='utf-8')
     ornts = {
@@ -38,13 +42,13 @@ def totaltext_to_json(image_path: Path, label_path: Path, output_dir: Path):
             points = [(x, y) for x, y in zip(x_coords, y_coords)]
             word_infos.append({'poly': points, 'ornt': ornt, 'content': content})
 
-    json_data = dict()
-    json_data['version'] = "4.5.7"
-    json_data['imagePath'] = image_path.name
-    json_data['imageData'] = None
-    json_data['imageHeight'] = image.shape[0]
-    json_data['imageWidth'] = image.shape[1]
-    json_data['shapes'] = []
+    json_info = dict()
+    json_info['version'] = "4.5.7"
+    json_info['imagePath'] = image_path.name
+    json_info['imageData'] = None
+    json_info['imageHeight'] = image.shape[0]
+    json_info['imageWidth'] = image.shape[1]
+    json_info['shapes'] = []
 
     for word_info in word_infos:
         word = dict()
@@ -53,15 +57,9 @@ def totaltext_to_json(image_path: Path, label_path: Path, output_dir: Path):
         word['shape_type'] = 'polygon'
         word['value'] = word_info['content'] if word_info['content'] != '#' else ''
         word['ornt'] = word_info['ornt']
-        json_data['shapes'].append(word)
+        json_info['shapes'].append(word)
 
-    image_path = output_dir.joinpath(image_path.name)
-    json_path = image_path.with_suffix('.json')
-
-    with json_path.open(mode='w', encoding='utf-8') as f:
-        json.dump(json_data, f, indent=4, ensure_ascii=False)
-
-    cv2.imwrite(str(image_path), image)
+    return image, json_info
 
 
 if __name__ == '__main__':
@@ -103,4 +101,11 @@ if __name__ == '__main__':
     data_pairs = [[image_path, label_path] for image_path, label_path in zip(image_paths, label_paths)]
 
     for image_path, label_path in tqdm(data_pairs):
-        totaltext_to_json(image_path, label_path, output_dir)
+        image, json_info = totaltext_to_json(image_path, label_path, output_dir)
+
+        image_path = output_dir.joinpath(image_path.name)
+        cv2.imwrite(str(image_path), image)
+
+        json_path = image_path.with_suffix('.json')
+        with json_path.open(mode='w', encoding='utf-8') as f:
+            json.dump(json_info, f, indent=4, ensure_ascii=False)

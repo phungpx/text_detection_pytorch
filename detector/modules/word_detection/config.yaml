@@ -10,9 +10,29 @@ craft:
     region_score_theshold: 0.4  # text low-bound score
     cc_area_threshold: 10  # discard connected components with area below than area_threshold
     network_ratio: 2  # ratio between H, W of output tensor and H, W of input tensor
-    weight_path: '''models/weights/word_detection/craft_mlt_25k.pth'''
+    weight_path: '''models/weights/word_detection/CRAFT/craft_mlt_25k.pth'''
     batch_size: 2
     imsize: 1280
     device: '''cpu'''
     mean: (0.485, 0.456, 0.406)
     std: (0.229, 0.224, 0.225)
+
+PANNet:
+  module: modules.word_detection.PANNet.detector
+  class: WordDetector
+  WordDetector:
+    model:
+      module: models.definitions.PANNet.model
+      class: Model
+      Model:
+        model_config:
+          backbone: '''shufflenetv2'''
+          fpem_repeat: 2
+          pretrained: False
+          segmentation_head: '''FPEM_FFM'''
+    weight_path: '''models/weights/word_detection/PANNet/PAN_shufflenetv2_FPEM_FFM.pth'''
+    batch_size: 1
+    imsize: 736
+    device: '''cpu'''
+    mean: (0., 0., 0.)
+    std: (1., 1., 1.)
