@@ -26,11 +26,11 @@ PANNet:
       class: Model
       Model:
         model_config:
-          backbone: '''shufflenetv2'''
+          backbone: '''resnet18'''
           fpem_repeat: 2
           pretrained: False
           segmentation_head: '''FPEM_FFM'''
-    weight_path: '''models/weights/word_detection/PANNet/PAN_shufflenetv2_FPEM_FFM.pth'''
+    weight_path: '''models/weights/word_detection/PANNet/PAN_resnet18_FPEM_FFM.pth'''
     batch_size: 1
     imsize: 736
     device: '''cpu'''
