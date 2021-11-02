@@ -13,9 +13,10 @@ class Point(DTO):
 
 
 class Word(DTO):
-    def __init__(self, field: str = None, box: List[Point] = None, confidence: float = None):
+    def __init__(self, field: str = None, box: List[Point] = None, confidence: float = None, box_score: float = None):
         super(Word, self).__init__()
         self.box = box
+        self.box_score = box_score
         self.field = field
         self.confidence = confidence
 

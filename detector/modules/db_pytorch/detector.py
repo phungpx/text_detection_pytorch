@@ -10,7 +10,7 @@ import utils
 from abstract.processor import Processor
 import pyclipper
 
-from ..dto import Image, Point, Word
+from .dto import Image, Point, Word
 
 
 def chunks(lst: list, size: Optional[int] = None) -> Union[List, Generator]:
@@ -96,7 +96,10 @@ class WordDetector(Processor):
             if image.image is not None:
                 idx = boxes_batch.reshape(boxes_batch.shape[0], -1).sum(axis=1) > 0
                 boxes = [self.order_points(list(box)) for box in boxes_batch[idx]]
-                image.words = [Word(box=[Point(x=point[0], y=point[1]) for point in box]) for box in boxes]
+                scores = scores_batch[idx]
+                image.words = [Word(box=[Point(x=point[0], y=point[1]) for point in box], box_score=score)
+                            for box, score in zip(boxes, scores)]
+                print(image)
         return images,
 
     def get_binarize(self, pred):
@@ -281,3 +284,6 @@ class WordDetector(Processor):
         offset.AddPath(box, pyclipper.JT_ROUND, pyclipper.ET_CLOSEDPOLYGON)
         expanded = np.array(offset.Execute(distance))
         return expanded
+
+
+
