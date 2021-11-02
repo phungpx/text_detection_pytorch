@@ -98,7 +98,7 @@ if __name__ == '__main__':
     parser.add_argument('image_path', type=str, help='image dir.')
     parser.add_argument('--output-dir', type=str, help='path to save image')
     parser.add_argument('--pattern', type=str, help='glob pattern if image_path is a dir.')
-    parser.add_argument('--mode', type=str, default='CRAFT')
+    parser.add_argument('--mode', type=str, default='DB')
     parser.add_argument('--start-index', type=int, default=1)
     args = parser.parse_args()
 
@@ -131,7 +131,9 @@ if __name__ == '__main__':
             doc_infos, = module_time(stages['CRAFT'], 'CRAFT', images)
         elif args.mode == 'PANNet':
             doc_infos, = module_time(stages['PANNet'], 'PANNet', images)
-
+        elif args.mode == 'DB':
+            doc_infos, = module_time(stages['DB'], 'DBnet', images)
+            
         for i, doc_info in enumerate(doc_infos):
             image = doc_info.image
             for word in doc_info.words:

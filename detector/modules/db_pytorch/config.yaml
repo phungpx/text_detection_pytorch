@@ -1,5 +1,5 @@
 DB:
-  module: modules.word_detection.db_pytorch.detector
+  module: modules.db_pytorch.detector
   class: WordDetector
   WordDetector:
     model:
