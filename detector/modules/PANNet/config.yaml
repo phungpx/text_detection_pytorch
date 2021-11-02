@@ -1,0 +1,20 @@
+PANNet:
+  module: modules.PANNet.detector
+  class: Detector
+  Detector:
+    model:
+      module: models.definitions.PANNet.model
+      class: Model
+      Model:
+        model_config:
+          backbone: '''resnet18'''
+          fpem_repeat: 2
+          pretrained: False
+          segmentation_head: '''FPEM_FFM'''
+    weight_path: '''models/weights/PANNet/PAN_resnet18_FPEM_FFM.pth'''
+    batch_size: 1
+    binary_threshold: 0.7311
+    imsize: 640
+    device: '''cpu'''
+    mean: (0., 0., 0.)
+    std: (1., 1., 1.)

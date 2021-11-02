@@ -1,6 +1,11 @@
-word_detection:
-  module: modules.word_detection.word_detection
-  class: WordDetection
-  WordDetection:
-    # mode: '''craft'''
+PANNet:
+  module: modules.PANNet.detection
+  class: Detection
+  Detection:
     mode: '''PANNet'''
+
+CRAFT:
+  module: modules.CRAFT.detection
+  class: Detection
+  Detection:
+    mode: '''CRAFT'''

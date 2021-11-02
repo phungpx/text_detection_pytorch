@@ -7,9 +7,9 @@ from abstract.stage import Stage
 from .dto import Image
 
 
-class WordDetection(Stage):
+class Detection(Stage):
     def __init__(self, *args, **kwargs):
-        super(WordDetection, self).__init__(*args, **kwargs)
+        super(Detection, self).__init__(*args, **kwargs)
 
     def preprocess(self, images: List[np.ndarray]) -> Tuple[List[Image]]:
         for image in images:
@@ -21,9 +21,5 @@ class WordDetection(Stage):
                 raise ValueError(f'image must be 3-channel, not {image.shape[2]}-channel.')
 
         images = [Image(image=image) for image in images]
-
-        return images,
-
-    def postprocess(self, images: List[Image]) -> Tuple[List[Image]]:
 
         return images,

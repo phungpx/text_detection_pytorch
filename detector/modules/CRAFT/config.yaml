@@ -1,0 +1,18 @@
+CRAFT:
+  module: modules.CRAFT.detector
+  class: Detector
+  Detector:
+    model:
+      module: models.definitions.craft
+      class: CRAFT
+    affinity_score_threshold: 0.4  # link confidence threshold
+    region_discard_threshold: 0.7  # text confidence threshold
+    region_score_theshold: 0.4  # text low-bound score
+    cc_area_threshold: 10  # discard connected components with area below than area_threshold
+    network_ratio: 2  # ratio between H, W of output tensor and H, W of input tensor
+    weight_path: '''models/weights/CRAFT/craft_mlt_25k.pth'''
+    batch_size: 2
+    imsize: 1280
+    device: '''cpu'''
+    mean: (0.485, 0.456, 0.406)
+    std: (0.229, 0.224, 0.225)

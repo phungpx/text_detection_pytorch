@@ -98,6 +98,7 @@ if __name__ == '__main__':
     parser.add_argument('image_path', type=str, help='image dir.')
     parser.add_argument('--output-dir', type=str, help='path to save image')
     parser.add_argument('--pattern', type=str, help='glob pattern if image_path is a dir.')
+    parser.add_argument('--mode', type=str, default='CRAFT')
     parser.add_argument('--start-index', type=int, default=1)
     args = parser.parse_args()
 
@@ -110,12 +111,10 @@ if __name__ == '__main__':
     else:
         image_paths = [Path(args.image_path)]
 
-    output_dir = Path(args.output_dir) if args.output_dir else Path('scripts/output/word_detection/')
+    output_dir = Path(args.output_dir) if args.output_dir else Path('scripts/output/')
+    output_dir = output_dir.joinpath(args.mode)
     if not output_dir.exists():
         output_dir.mkdir(parents=True)
-
-    config = utils.load_yaml(yaml_file='config.yaml')
-    mode = eval(config['word_detection']['WordDetection']['mode'])
 
     stages = utils.eval_config(config='config.yaml')
 
@@ -123,12 +122,15 @@ if __name__ == '__main__':
         print('-' * 50)
         print(f'{image_id} / {len(image_paths)} - {image_path}')
 
-        save_dir = mksavedir(input_dir=Path(args.image_path), output_dir=output_dir, path=image_path)
+        # save_dir = mksavedir(input_dir=Path(args.image_path), output_dir=output_dir, path=image_path)
 
         paths = pdf_path_to_image_paths(image_path) if image_path.suffix == '.pdf' else [image_path]
         images = [cv2.imread(str(image_path)) for image_path in paths]
 
-        doc_infos, = module_time(stages['word_detection'], 'Word Detection', images)
+        if args.mode == 'CRAFT':
+            doc_infos, = module_time(stages['CRAFT'], 'CRAFT', images)
+        elif args.mode == 'PANNet':
+            doc_infos, = module_time(stages['PANNet'], 'PANNet', images)
 
         for i, doc_info in enumerate(doc_infos):
             image = doc_info.image
@@ -143,4 +145,4 @@ if __name__ == '__main__':
 
             image_name = f'{image_path.stem}_{i}'
             image = np.ascontiguousarray(image, dtype=np.uint8)
-            cv2.imwrite(str(save_dir.joinpath(f'{image_name}{image_path.suffix}')), image)
+            cv2.imwrite(str(output_dir.joinpath(f'{image_name}{image_path.suffix}')), image)

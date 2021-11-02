@@ -10,7 +10,7 @@ from torch import nn
 import utils
 from abstract.processor import Processor
 
-from ..dto import Image, Point, Word
+from .dto import Image, Point, Word
 
 
 def chunks(lst: list, size: Optional[int] = None) -> Union[List, Generator]:
@@ -21,7 +21,7 @@ def chunks(lst: list, size: Optional[int] = None) -> Union[List, Generator]:
             yield lst[i:i + size]
 
 
-class WordDetector(Processor):
+class Detector(Processor):
     def __init__(
         self,
         model: nn.Module,
@@ -35,7 +35,7 @@ class WordDetector(Processor):
         affinity_score_threshold: float = 0.4,
         cc_area_threshold: float = 10
     ):
-        super(WordDetector, self).__init__()
+        super(Detector, self).__init__()
         self.model = model
         self.imsize = imsize
         self.device = device
