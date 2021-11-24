@@ -142,7 +142,7 @@ class FPEM_FFM(nn.Module):
 
         # FPEMs
         for i, fpem in enumerate(self.FPEMs):
-            c2, c3, c4, c5 = fpem(x=(c2, c3, c4, c5))
+            c2, c3, c4, c5 = fpem(features=(c2, c3, c4, c5))
             if i == 0:
                 c2_ffm = c2
                 c3_ffm = c3
