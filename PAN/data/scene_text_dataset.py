@@ -4,6 +4,7 @@ import torch
 import random
 import pyclipper
 import numpy as np
+import imgaug.augmenters as iaa
 
 from pathlib import Path
 from natsort import natsorted
@@ -18,7 +19,7 @@ class SceneTextDataset(Dataset):
     def __init__(
         self,
         dirnames: List[str],
-        image_size: Tuple[int, int] = (640, 640),
+        imsize: int = 640,
         mean: Optional[Tuple[float, float, float]] = None,
         std: Optional[Tuple[float, float, float]] = None,
         shrink_ratio: float = 0.5,
@@ -28,8 +29,8 @@ class SceneTextDataset(Dataset):
         require_transforms: Optional[List] = None,
     ) -> None:
         super(SceneTextDataset, self).__init__()
-        self.augmenter = augmenter
-        self.image_size = image_size
+        self.imsize = imsize
+        self.augmenter = Augmenter()
         self.shrink_ratio = shrink_ratio
         self.transforms = transforms if transforms else []
         self.require_transforms = require_transforms if require_transforms else []
@@ -68,12 +69,12 @@ class SceneTextDataset(Dataset):
         image_info = [str(image_path), image.shape[1::-1]]
 
         for transform in random.sample(self.transforms, k=random.randint(0, len(self.transforms))):
-            image, label = self.augmenter(image=image, label=label, augmenter=transform)
+            image, label = self.augmenter.apply(image=image, label=label, augmenter=transform)
 
         for require_transform in self.require_transforms:
-            image, label = self.augmenter(image=image, label=label, augmenter=require_transform)
+            image, label = self.augmenter.apply(image=image, label=label, augmenter=require_transform)
 
-        image, label = self.resize(image=image, label=label, imsize=self.image_size)
+        image, label = self.resize(image=image, label=label, imsize=self.imsize)
 
         text_map, kernel_map = self.generate_segmap(image=image, label=label, shrink_ratio=self.shrink_ratio)
 
@@ -94,12 +95,12 @@ class SceneTextDataset(Dataset):
     def resize(self, image, label, imsize=640):
         f = imsize / min(image.shape[:2])
 
-        image, label = augmenter.apply(
+        image, label = self.augmenter.apply(
             image=image, label=label,
             augmenter=iaa.Resize(size=f)
         )
 
-        image, label = augmenter.apply(
+        image, label = self.augmenter.apply(
             image=image, label=label,
             augmenter=iaa.CropToFixedSize(width=imsize, height=imsize, position='uniform')
         )
@@ -154,6 +155,5 @@ class SceneTextDataset(Dataset):
             cv2.fillPoly(img=kernel_map, pts=np.int32(shrinked_polygons), color=text_id + 1)
 
             text_id += 1
-
 
         return text_map, kernel_map
