@@ -15,7 +15,7 @@ from typing import List, Tuple, Dict, Optional
 from .augmenter import Augmenter
 
 
-class SceneTextDataset(Dataset):
+class PANDataset(Dataset):
     def __init__(
         self,
         dirnames: List[str],
@@ -28,7 +28,7 @@ class SceneTextDataset(Dataset):
         transforms: Optional[List] = None,
         require_transforms: Optional[List] = None,
     ) -> None:
-        super(SceneTextDataset, self).__init__()
+        super(PANDataset, self).__init__()
         self.imsize = imsize
         self.augmenter = Augmenter()
         self.shrink_ratio = shrink_ratio
