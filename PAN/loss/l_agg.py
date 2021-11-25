@@ -33,7 +33,7 @@ class AggregationLoss(nn.Module):
             target_kernel = target_kernels[id_sample]
 
             # get the number of text instances
-            num_texts = target_text.max().item() + 1   # including background
+            num_texts = int(target_text.max().item() + 1)   # including background
 
             instance_agg_losses = []
 

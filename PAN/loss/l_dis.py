@@ -34,7 +34,7 @@ class DistanceLoss(nn.Module):
             target_kernel = target_kernels[id_sample]
 
             # get the number of text instances
-            num_texts = target_text.max().item() + 1   # including background
+            num_texts = int(target_text.max().item() + 1)   # including background
 
             G_Ks = []
             for id_text in range(1, num_texts):  # all text instances excluding background
@@ -55,7 +55,6 @@ class DistanceLoss(nn.Module):
                 # compute D(Ki, Kj) = max(delta_dis - ||G(K_i) - G(K_j)||, 0) ** 2
                 D_Ki_Kj = self.delta_dis - torch.linalg.norm((G_Ki - G_Kj), ord=2)  # 1
                 D_Ki_Kj = torch.maximum(D_Ki_Kj, torch.zeros_like(D_Ki_Kj)).pow(2)  # 1
-
                 # sum_N(sum_N(ln(D(Ki, Kj)) + 1))
                 dis_loss += torch.log(D_Ki_Kj + 1)
 
