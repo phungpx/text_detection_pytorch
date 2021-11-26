@@ -10,7 +10,7 @@ from pathlib import Path
 from natsort import natsorted
 from torch.utils.data import Dataset
 from shapely.geometry import Polygon
-from typing import List, Tuple, Dict, Optional
+from typing import List, Tuple, Optional
 
 from .augmenter import Augmenter
 
@@ -119,7 +119,7 @@ class PANDataset(Dataset):
         return [(x1, y1), (x2, y1), (x2, y2), (x1, y2)]
 
     def shrink_polygon(self, points, r: float = 0.4):
-        shrinker = pyclipper.PyclipperOffset()    
+        shrinker = pyclipper.PyclipperOffset()
 
         poly = Polygon(points)
         if not poly.is_valid:
@@ -130,7 +130,7 @@ class PANDataset(Dataset):
         points = [tuple(point) for point in points]
         shrinker.AddPath(points, pyclipper.JT_ROUND, pyclipper.ET_CLOSEDPOLYGON)
         polys = shrinker.Execute(-d)
-        
+
         return polys
 
     def generate_segmap(self, image, label, shrink_ratio):

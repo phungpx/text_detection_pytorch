@@ -16,8 +16,6 @@ class TextKernelLoss(nn.Module):
         Output:
             distance_loss: float
         '''
-        num_samples = preds.shape[0]
-
         pred_texts = torch.sigmoid(preds[:, 0, :, :])
         pred_kernels = torch.sigmoid(preds[:, 1, :, :])
 

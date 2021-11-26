@@ -21,11 +21,11 @@ class SeparableConv2D(nn.Module):
         )
         self.bn = nn.BatchNorm2d(num_features=out_channels)
         self.relu = nn.ReLU(inplace=True)
-    
+
     def forward(self, x):
         x = self.depthwise(x)
         x = self.pointwise(x)
-        x =  self.relu(self.bn(x))
+        x = self.relu(self.bn(x))
         return x
 
 
@@ -41,7 +41,7 @@ class ConvBNReLU(nn.Module):
         )
         self.bn = nn.BatchNorm2d(num_features=out_channels)
         self.relu = nn.ReLU(inplace=True)
-    
+
     def forward(self, x):
         x = self.relu(self.bn(self.conv(x)))
         return x
@@ -103,7 +103,7 @@ class FPEM_FFM(nn.Module):
             out_channels=out_channels,
             kernel_size=1,
         )
-        
+
         self.conv1x1_c5 = ConvBNReLU(
             in_channels=backbone_out_channels[3],
             out_channels=out_channels,
@@ -114,7 +114,7 @@ class FPEM_FFM(nn.Module):
         self.FPEMs = nn.ModuleList()
         for i in range(num_FPEMs):
             self.FPEMs.append(FPEM(in_channels=out_channels))
-        
+
         # final layer
         self.conv_final = nn.Conv2d(
             in_channels=out_channels * 4,

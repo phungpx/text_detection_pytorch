@@ -52,7 +52,6 @@ class Augmenter():
 
         return image, label
 
-
     def get_points(self, label):
         if isinstance(label, str):
             with open(file=label, mode='r', encoding='utf-8') as f:
@@ -93,9 +92,20 @@ if __name__ == '__main__':
     for shape in label['shapes']:
         if shape['shape_type'] == 'rectangle':
             points = np.int32(shape['points'])
-            cv2.rectangle(img=image, pt1=tuple(points[0]), pt2=tuple(points[1]), color=(0, 255, 0), thickness=thickness)
+            cv2.rectangle(
+                img=image,
+                pt1=tuple(points[0]),
+                pt2=tuple(points[1]),
+                color=(0, 255, 0),
+                thickness=thickness
+            )
         elif shape['shape_type'] == 'polygon':
-            cv2.polylines(img=image, pts=[np.int32(shape['points'])], isClosed=True, color=(0, 255, 0), thickness=thickness)
+            cv2.polylines(
+                img=image,
+                pts=[np.int32(shape['points'])],
+                isClosed=True, color=(0, 255, 0),
+                thickness=thickness
+            )
         else:
             raise ValueError(f"visual function for {shape['shape_type']} is not implemented.")
 

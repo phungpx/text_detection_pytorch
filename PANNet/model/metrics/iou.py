@@ -1,5 +1,5 @@
 import numpy as np
-from collections import namedtuple
+# from collections import namedtuple
 from shapely.geometry import Polygon
 
 
@@ -42,13 +42,13 @@ class DetectionIoUEvaluator(object):
 
         matchedSum = 0
 
-        Rectangle = namedtuple('Rectangle', 'xmin ymin xmax ymax')
+        # Rectangle = namedtuple('Rectangle', 'xmin ymin xmax ymax')
 
         numGlobalCareGt = 0
         numGlobalCareDet = 0
 
-        arrGlobalConfidences = []
-        arrGlobalMatches = []
+        # arrGlobalConfidences = []
+        # arrGlobalMatches = []
 
         recall = 0
         precision = 0
@@ -72,8 +72,8 @@ class DetectionIoUEvaluator(object):
         pairs = []
         detMatchedNums = []
 
-        arrSampleConfidences = []
-        arrSampleMatch = []
+        # arrSampleConfidences = []
+        # arrSampleMatch = []
 
         evaluationLog = ""
 
@@ -129,7 +129,10 @@ class DetectionIoUEvaluator(object):
 
             for gtNum in range(len(gtPols)):
                 for detNum in range(len(detPols)):
-                    if gtRectMat[gtNum] == 0 and detRectMat[detNum] == 0 and gtNum not in gtDontCarePolsNum and detNum not in detDontCarePolsNum:
+                    if gtRectMat[gtNum] == 0 and \
+                       detRectMat[detNum] == 0 and \
+                       gtNum not in gtDontCarePolsNum and \
+                       detNum not in detDontCarePolsNum:
                         if iouMat[gtNum, detNum] > self.iou_constraint:
                             gtRectMat[gtNum] = 1
                             detRectMat[detNum] = 1
