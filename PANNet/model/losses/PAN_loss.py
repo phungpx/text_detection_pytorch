@@ -27,7 +27,6 @@ class PANLoss(nn.Module):
         dis_loss = self.dis_loss_fn(preds, targets)
         text_loss, kernel_loss = self.text_kernel_loss_fn(preds, targets)
 
-        # mean or sum
         if self.reduction == 'mean':
             agg_loss = agg_loss.mean()
             dis_loss = dis_loss.mean()
