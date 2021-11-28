@@ -12,12 +12,15 @@ from utils import read_json, write_json
 class ConfigParser:
     def __init__(self, config, resume=None, modification=None, run_id=None):
         """
-        class to parse configuration json file. Handles hyperparameters for training, initializations of modules, checkpoint saving
+        class to parse configuration json file. Handles hyperparameters for training,
+        initializations of modules, checkpoint saving
         and logging module.
-        :param config: Dict containing configurations, hyperparameters for training. contents of `config.json` file for example.
+        :param config: Dict containing configurations, hyperparameters for training.
+         contents of `config.json` file for example.
         :param resume: String, path to the checkpoint being loaded.
         :param modification: Dict keychain:value, specifying position values to be replaced from config dict.
-        :param run_id: Unique Identifier for training processes. Used to save checkpoints and training log. Timestamp is being used as default
+        :param run_id: Unique Identifier for training processes. Used to save checkpoints and training log.
+         Timestamp is being used as default
         """
         # Load config file and apply modification.
         self._config = update_config(config, modification)
@@ -70,14 +73,14 @@ class ConfigParser:
             assert args.config is not None, msg_no_cfg
             resume = None
             cfg_fname = Path(args.config)
-        
+
         config = read_json(cfg_fname)
         if args.config and resume:
             # Update new config for fine-tuning.
             config.update(read_json(args.config))
 
         # Parse custom cli options into dictionary.
-        modification = {opt.target : getattr(args, get_opt_name(opt.flags)) for opt in options}
+        modification = {opt.target: getattr(args, get_opt_name(opt.flags)) for opt in options}
 
         return cls(config, resume, modification)
 

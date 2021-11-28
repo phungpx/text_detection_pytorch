@@ -1,6 +1,6 @@
 import torch
+import numpy as np
 from abc import abstractmethod
-from numpy import inf
 from logger import TensorboardWriter
 
 
@@ -13,8 +13,8 @@ class BaseTrainer:
 
         self.model = model
         self.criterion = criterion
-        self.metric_ftns = metric_ftns
         self.optimizer = optimizer
+        self.metric_ftns = metric_ftns
 
         cfg_trainer = config['trainer']
         self.epochs = cfg_trainer['epochs']
@@ -29,10 +29,10 @@ class BaseTrainer:
             self.mnt_mode, self.mnt_metric = self.monitor.split()
             assert self.mnt_mode in ['min', 'max']
 
-            self.mnt_best = inf if self.mnt_mode == 'min' else -inf
-            self.early_stop = cfg_trainer.get('early_stop', inf)
+            self.mnt_best = np.inf if self.mnt_mode == 'min' else -np.inf
+            self.early_stop = cfg_trainer.get('early_stop', np.inf)
             if self.early_stop <= 0:
-                self.early_stop = inf
+                self.early_stop = np.inf
 
         self.start_epoch = 1
 
@@ -42,13 +42,12 @@ class BaseTrainer:
         self.writer = TensorboardWriter(config.log_dir, self.logger, cfg_trainer['tensorboard'])
 
         if config.resume is not None:
-            self._resume_checkpoint(config.resume)
+            self.resume_checkpoint(config.resume)
 
     @abstractmethod
-    def _train_epoch(self, epoch):
-        """
-        Training logic for an epoch
-        :param epoch: Current epoch number
+    def train_epoch(self, epoch):
+        """Training logic for an epoch
+            :param epoch: Current epoch number
         """
         raise NotImplementedError
 
@@ -58,7 +57,7 @@ class BaseTrainer:
         """
         not_improved_count = 0
         for epoch in range(self.start_epoch, self.epochs + 1):
-            result = self._train_epoch(epoch)
+            result = self.train_epoch(epoch)
 
             # save logged informations into log dict
             log = {'epoch': epoch}
@@ -96,9 +95,9 @@ class BaseTrainer:
                     break
 
             if epoch % self.save_period == 0:
-                self._save_checkpoint(epoch, save_best=best)
+                self.save_checkpoint(epoch, save_best=best)
 
-    def _save_checkpoint(self, epoch, save_best=False):
+    def save_checkpoint(self, epoch, save_best=False):
         """Saving checkpoints
             :param epoch: current epoch number
             :param log: logging information of the epoch
@@ -116,6 +115,7 @@ class BaseTrainer:
 
         filename = str(self.checkpoint_dir / 'checkpoint-epoch{}.pth'.format(epoch))
         torch.save(state, filename)
+
         self.logger.info("Saving checkpoint: {} ...".format(filename))
 
         if save_best:
@@ -123,7 +123,7 @@ class BaseTrainer:
             torch.save(state, best_path)
             self.logger.info("Saving current best: model_best.pth ...")
 
-    def _resume_checkpoint(self, resume_path):
+    def resume_checkpoint(self, resume_path):
         """
         Resume from saved checkpoints
         :param resume_path: Checkpoint path to be resumed

@@ -1,9 +1,6 @@
 import torch
 import numpy as np
-from torch import nn
 from torchvision.utils import make_grid
-from torch.utils.data import DataLoader
-from typing import Callable, Dict, Optional
 
 from utils import inf_loop
 from utils import MetricTracker
@@ -15,21 +12,24 @@ class Trainer(BaseTrainer):
     """
     def __init__(
         self,
-        config: Dict,
-        data_loader: DataLoader,
-        model: nn.Module,
-        criterion: Callable,
-        metric_ftns: Callable,
+        config,
+        data_loader,
+        model,
+        criterion,
+        metric_ftns,
         optimizer,
-        valid_data_loader: Optional[DataLoader] = None,
+        valid_data_loader=None,
         lr_scheduler=None,
-        len_epoch: int = None,
-        device: str = 'cpu',
+        len_epoch=None,
+        device='cpu',
     ):
         super(Trainer, self).__init__(model, criterion, metric_ftns, optimizer, config)
         self.config = config
         self.device = device
         self.data_loader = data_loader
+        self.lr_scheduler = lr_scheduler
+        self.valid_data_loader = valid_data_loader
+
         if len_epoch is None:
             # epoch-based training
             self.len_epoch = len(self.data_loader)
@@ -37,13 +37,17 @@ class Trainer(BaseTrainer):
             # iteration-based training
             self.data_loader = inf_loop(data_loader)
             self.len_epoch = len_epoch
-        self.valid_data_loader = valid_data_loader
+
         self.do_validation = self.valid_data_loader is not None
-        self.lr_scheduler = lr_scheduler
         self.log_step = int(np.sqrt(data_loader.batch_size))
 
-        self.train_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
-        self.valid_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
+        self.train_metrics = MetricTracker(
+            'loss', *[metric_fn.__name__ for metric_fn in self.metric_ftns], writer=self.writer
+        )
+
+        self.valid_metrics = MetricTracker(
+            'loss', *[metric_fn.__name__ for metric_fn in self.metric_ftns], writer=self.writer
+        )
 
     def train_epoch(self, epoch):
         """Training logic for an epoch
