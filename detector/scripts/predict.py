@@ -9,7 +9,7 @@ import argparse
 import numpy as np
 from pathlib import Path
 from natsort import natsorted
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 from pdf2image import convert_from_path, pdfinfo_from_path
 
 
@@ -61,7 +61,7 @@ def module_time(module, module_name, *args):
 
 
 def draw_polygon(
-    title: str,
+    title: Optional[str],
     image: np.ndarray,
     points: List[Tuple[int, int]],
     color: Tuple[int, int, int],
@@ -69,28 +69,30 @@ def draw_polygon(
 ) -> None:
     cv2.polylines(
         img=image, pts=[points], isClosed=True, color=color,
-        thickness=max(1, max(image.shape) // 400)
+        thickness=max(1, max(image.shape) // 500)
     )
 
-    font_scale = max(image.shape) / 1200
-    thickness = max(1, max(image.shape) // 600)
-    w, h = cv2.getTextSize(title, cv2.FONT_HERSHEY_PLAIN, font_scale, thickness)[0]
+    if title is not None:
+        font_scale = max(image.shape) / 1200
+        thickness = max(1, max(image.shape) // 600)
+        w, h = cv2.getTextSize(title, cv2.FONT_HERSHEY_PLAIN, font_scale, thickness)[0]
 
-    if title_position == 'bottom_left':
-        title_box = [(points[0][0], points[0][1]),
-                     (points[0][0] + w, points[0][1] + int(1.5 * h))]
-        title_pos = (points[0][0], points[0][1] + int(1.3 * h))
-    elif title_position == 'top_left':
-        title_box = [(points[0][0], points[0][1]),
-                     (points[0][0] + w, max(0, points[0][1] - int(1.5 * h)))]
-        title_pos = (points[0][0], max(0, points[0][1] - int(0.3 * h)))
+        if title_position == 'bottom_left':
+            title_box = [(points[0][0], points[0][1]),
+                         (points[0][0] + w, points[0][1] + int(1.5 * h))]
+            title_pos = (points[0][0], points[0][1] + int(1.3 * h))
+        elif title_position == 'top_left':
+            title_box = [(points[0][0], points[0][1]),
+                         (points[0][0] + w, max(0, points[0][1] - int(1.5 * h)))]
+            title_pos = (points[0][0], max(0, points[0][1] - int(0.3 * h)))
 
-    cv2.rectangle(img=image, pt1=title_box[0], pt2=title_box[1], color=color, thickness=-1)
+        cv2.rectangle(img=image, pt1=title_box[0], pt2=title_box[1], color=color, thickness=-1)
 
-    cv2.putText(
-        img=image, text=title, org=title_pos, fontFace=cv2.FONT_HERSHEY_PLAIN, fontScale=font_scale,
-        color=(255, 255, 255), thickness=thickness, lineType=cv2.LINE_AA
-    )
+        cv2.putText(
+            img=image, text=title, org=title_pos,
+            fontFace=cv2.FONT_HERSHEY_PLAIN, fontScale=font_scale,
+            color=(255, 255, 255), thickness=thickness, lineType=cv2.LINE_AA
+        )
 
 
 if __name__ == '__main__':
@@ -138,7 +140,7 @@ if __name__ == '__main__':
             image = doc_info.image
             for word in doc_info.words:
                 points = np.int32([[point.x, point.y] for point in word.box])
-                title = f"{word.field}: {word.confidence:.4f}" if word.field else "Word"
+                title = f"{word.field}: {word.confidence:.4f}" if word.field else None
                 draw_polygon(
                     image=image, points=points,
                     title=title, color=colors.get(word.field, (0, 255, 0)),
