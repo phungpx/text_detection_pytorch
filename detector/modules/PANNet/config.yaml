@@ -7,12 +7,12 @@ PANNet:
       class: Model
       Model:
         model_config:
-          backbone: '''resnet18'''
+          backbone: '''shufflenetv2'''
           fpem_repeat: 2
           pretrained: False
           segmentation_head: '''FPEM_FFM'''
-    weight_path: '''models/weights/PANNet/PAN_resnet18_FPEM_FFM.pth'''
-    binary_threshold: 0.5
+    weight_path: '''models/weights/PANNet/PAN_shufflenetv2_FPEM_FFM.pth'''
+    binary_threshold: 0.7311
     imsize: 768
     shrink_ratio: 0.5
     batch_size: 1
