@@ -1,0 +1,131 @@
+data:
+  test:
+    module: torch.utils.data
+    class: DataLoader
+    DataLoader:
+      dataset:
+        module: flame.core.data.field_dataset
+        class: FieldDataset
+        FieldDataset:
+          dirnames:
+            - '''dataset/FIELD_DETECTION/test/CCCD_BACK/'''
+          classes:
+            BACKGROUND: [[0, 0, 0], 0, False, False]  # color, class_id, reduce_height, reduce_width
+            DATE_1: [[229, 255, 0], 1, True, False]
+            DATE_2: [[0, 179, 255], 2, True, False]
+            DATE_3: [[0, 255, 208], 3, True, False]
+            V_PRO1: [[252, 3, 219], 4, True, False]
+            V_PRO2: [[252, 3, 69], 5, True, False]
+            SIGN_NAME: [[0, 64, 128], 6, True, False]
+          reduce_ratios: (0.25, 0.25)
+          image_size: (256, 256)
+          image_extents: ['''.jpg''', '''.png''', '''.jpeg''', '''.JPG''', '''.PNG''', '''.JPEG''']
+          label_extent: '''.json'''
+      batch_size: 16
+      shuffle: False
+      pin_memory: True
+      num_workers: 12
+      drop_last: False
+      collate_fn: 'lambda batch:tuple(zip(*batch))'
+
+model:
+  module: flame.core.model.fcn
+  class: FCN
+  FCN:
+    backbone: '''resnet50'''
+    backbone_fixed: False
+    pretrained_backbone: False
+    pretrained: False
+    replace_stride_with_dilation: [True, True, True]
+    num_classes: 7
+
+metrics:
+  module: flame.handlers.metrics.metrics
+  class: Metrics
+  Metrics:
+    metrics:
+      dice_loss:
+        module: flame.handlers.metrics.losses.diceloss
+        class: MultiDice
+        MultiDice:
+          class_weight_alpha: 0.5
+          output_transform: 'lambda x: x'
+      dice_score:
+        module: flame.handlers.metrics.evaluations.dice
+        class: MultiDice
+        MultiDice:
+          class_weight_alpha: 0.0
+          output_transform: 'lambda x: x'
+      pixel_accuracy:
+        module: flame.handlers.metrics.evaluations.segm_metric
+        class: SegmMetric
+        SegmMetric:
+          metric_name: '''pixel_accuracy'''
+          output_transform: 'lambda x: x'
+      mean_pixel_accuracy:
+        module: flame.handlers.metrics.evaluations.segm_metric
+        class: SegmMetric
+        SegmMetric:
+          metric_name: '''mean_pixel_accuracy'''
+          output_transform: 'lambda x: x'
+      mean_IU:
+        module: flame.handlers.metrics.evaluations.segm_metric
+        class: SegmMetric
+        SegmMetric:
+          metric_name: '''mean_iou'''
+          output_transform: 'lambda x: x'
+      frequence_weighted_IU:
+        module: flame.handlers.metrics.evaluations.segm_metric
+        class: SegmMetric
+        SegmMetric:
+          metric_name: '''frequence_weighted_IU'''
+          output_transform: 'lambda x: x'
+
+    attach_to:
+      engine: '''test'''
+
+screenlogger:
+  module: flame.handlers.screenlogger
+  class: ScreenLogger
+  ScreenLogger:
+    eval_names:
+      - '''test'''
+
+checkpoint_loader:
+  module: flame.handlers.checkpoint
+  class: CheckpointLoader
+  CheckpointLoader:
+    checkpoint_path: '''checkpoint/FIELD_DETECTION/CCCD_BACK/fcn/2111041458/best_model_33_dice_loss=-0.1118.pt'''
+    mode: '''test'''
+
+predictor:
+  module: flame.handlers.field_predictor
+  class: FieldPredictor
+  FieldPredictor:
+    evaluator_name: '''engine'''
+    output_dir: '''checkpoint/FIELD_DETECTION/CCCD_BACK/fcn/2111041458/best_model_33_dice_loss=-0.1118/test'''
+    image_extent: '''.jpg'''
+    mask_extent: '''.png'''
+    prob_threshold: 0.5
+    threshold: 0.00
+    classes:
+      # color, class_idx, reduce_height, reduce_width, area_threshold
+      BACKGROUND: [[0, 0, 0], 0, False, False, 0.]
+      DATE_1: [[229, 255, 0], 1, True, False, 0.]
+      DATE_2: [[0, 179, 255], 2, True, False, 0.]
+      DATE_3: [[0, 255, 208], 3, True, False, 0.]
+      V_PRO1: [[252, 3, 219], 4, True, False, 0.]
+      V_PRO2: [[252, 3, 69], 5, True, False, 0.]
+      SIGN_NAME: [[0, 64, 128], 6, True, False, 0.]
+    output_transform: 'lambda x: (x[0], x[-1])'
+
+engine:
+  module: flame.core.engine.engine
+  class: Evaluator
+  Evaluator:
+    dataset: config['data']['test']
+    device: '''cuda'''
+
+extralibs:
+  torch: torch
+  transforms: torchvision.transforms
