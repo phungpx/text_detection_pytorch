@@ -1,0 +1,80 @@
+data:
+  test:
+    module: torch.utils.data
+    class: DataLoader
+    DataLoader:
+      dataset:
+        module: flame.core.data.PAN_dataset
+        class: PANDataset
+        PANDataset:
+          dirnames:
+            - '''../dataset/incidental_scene_text_2015/test/'''
+          imsize: 640
+          mean: '(0., 0., 0.)'
+          std: '(1., 1., 1.)'
+          shrink_ratio: 0.5
+          image_extents: ['''.jpg''', '''.png''', '''.jpeg''', '''.JPG''', '''.PNG''', '''.JPEG''']
+          label_extent: '''.json'''
+      batch_size: 8
+      shuffle: False
+      pin_memory: True
+      num_workers: 12
+      drop_last: False
+      collate_fn: 'lambda batch:tuple(zip(*batch))'
+
+model:
+  module: flame.core.model.PAN_net
+  class: PANNet
+  PANNet:
+    backbone_name: '''resnet18'''
+    backbone_pretrained: True
+    num_FPEMs: 2
+    binary_threshold: 0.5
+    shrink_ratio: 0.5
+
+metrics:
+  module: flame.handlers.metrics.metrics
+  class: Metrics
+  Metrics:
+    metrics:
+      iou:
+        module: flame.handlers.metrics.evals.metric
+        class: IOU
+        IOU:
+          output_transform: 'lambda x: (x[0], x[-1])'
+    attach_to:
+      engine: '''test'''
+
+screenlogger:
+  module: flame.handlers.screenlogger
+  class: ScreenLogger
+  ScreenLogger:
+    eval_names:
+      - '''test'''
+
+checkpoint_loader:
+  module: flame.handlers.checkpoint
+  class: CheckpointLoader
+  CheckpointLoader:
+    checkpoint_path: '''checkpoint/incidental_scene_text_2015/'''
+    mode: '''test'''
+
+predictor:
+  module: flame.handlers.predictor
+  class: Predictor
+  Predictor:
+    evaluator_name: '''engine'''
+    imsize: 640
+    output_dir: '''checkpoint/incidental_scene_text_2015/'''
+    output_transform: 'lambda x: (x[0], x[-1])'
+
+engine:
+  module: flame.core.engine.engine
+  class: Evaluator
+  Evaluator:
+    dataset: config['data']['test']
+    device: '''cuda'''
+
+extralibs:
+  torch: torch
+  transforms: torchvision.transforms

@@ -7,9 +7,8 @@ from .iou import DetectionIoUEvaluator
 
 
 class IOU(Metric):
-    def __init__(self, smooth=1e-6, output_transform=lambda x: x):
+    def __init__(self, output_transform=lambda x: x):
         super(IOU, self).__init__(output_transform)
-        self.smooth = smooth
         self.evaluator = DetectionIoUEvaluator()
 
     def reset(self):
@@ -25,7 +24,7 @@ class IOU(Metric):
         Return:
             None
         '''
-        pred_boxes, _, image_infos = output
+        pred_boxes, image_infos = output
         true_boxes = image_infos['text_boxes']
 
         self.trues.append(true_boxes)

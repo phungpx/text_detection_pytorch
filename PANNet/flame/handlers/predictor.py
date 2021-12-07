@@ -7,14 +7,14 @@ from ignite.engine import Events
 from ..module import Module
 
 
-class RegionPredictor(Module):
-    def __init__(self, evaluator_name, output_dir, output_img_ext, output_mask_ext, classes, output_transform=lambda x: x):
-        super(RegionPredictor, self).__init__()
-        self.classes = classes
+class Predictor(Module):
+    def __init__(
+        self, evaluator_name: str, imsize: int, output_dir: str, output_transform=lambda x: x
+    ):
+        super(Predictor, self).__init__()
+        self.imsize = imsize
         self.evaluator_name = evaluator_name
         self.output_dir = Path(output_dir)
-        self.output_img_ext = output_img_ext
-        self.output_mask_ext = output_mask_ext
         self._output_transform = output_transform
 
         if not self.output_dir.exists():
@@ -28,38 +28,24 @@ class RegionPredictor(Module):
         pass
 
     def update(self, output):
-        pred_boxes, image_infos = output
-        image_names, image_sizes = image_infos
-        image_sizes = [(w.item(), h.item()) for w, h in zip(*image_sizes)]
+        preds_boxes, image_infos = output
+        trues_boxes = [image_info['text_boxes'] for image_info in image_infos]
+        image_names = [image_info['image_path'] for image_info in image_infos]
+        image_sizes = [image_info['image_size'] for image_info in image_infos]
 
-        for pred, image_name, image_size in zip(preds, image_names, image_sizes):
-            image_path = '{}/{}{}'.format(self.output_dir, Path(image_name).stem, self.output_img_ext)
-            mask_path = '{}/{}_mask{}'.format(self.output_dir, Path(image_name).stem, self.output_mask_ext)
+        for pred_boxes, true_boxes, image_name, image_size in zip(preds_boxes, trues_boxes, image_names, image_sizes):
+            image_path = self.output_dir.joinpath(Path(image_name).name)
 
             image = cv2.imread(image_name)
-            mask = [
-                cv2.resize(
-                    self._rm_small_components(pred[i], class_ratio), dsize=image_size, interpolation=cv2.INTER_NEAREST
-                )
-                for _, i, class_ratio in self.classes.values()
-            ]
-            color_mask = np.zeros(shape=(*image_size[::-1], 3), dtype=np.uint8)
+            image = self.resize(image, imsize=self.imsize)
 
-            for (color, _, _), m in zip(self.classes.values(), mask):
-                color_mask[m.astype(np.bool)] = np.array(color, dtype=np.uint8)
-                image[m.astype(np.bool)] = (
-                    0.7 * image[m.astype(np.bool)].astype(np.float32) + 0.3 * np.array(color, dtype=np.float32)
-                ).astype(np.uint8)
+            for box in pred_boxes:
+                draw_polygon(image=image, points=box['points'], color=(0, 0, 255))
 
-            class_contours = [cv2.findContours(m, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2] for m in mask[-1:]]
-
-            thickness = max(image.shape) // 500
-            for cnts, (color, _, _) in zip(class_contours, self.classes.values()):
-                cv2.drawContours(image=image, contours=cnts, contourIdx=-1, color=color, thickness=thickness)
-                cv2.drawContours(image=color_mask, contours=cnts, contourIdx=-1, color=(255, 255, 255), thickness=thickness)
+            for box in true_boxes:
+                draw_polygon(image=image, points=box['points'], color=(0, 255, 0))
 
             cv2.imwrite(image_path, image)
-            cv2.imwrite(mask_path, color_mask)
 
     def compute(self):
         pass
@@ -82,11 +68,39 @@ class RegionPredictor(Module):
         if not engine.has_event_handler(self.iteration_completed, Events.ITERATION_COMPLETED):
             engine.add_event_handler(Events.ITERATION_COMPLETED, self.iteration_completed)
 
-    def _rm_small_components(self, mask, class_ratio):
-        mask = mask.copy()
-        num_class, label = cv2.connectedComponents(mask)
-        for i in range(1, num_class):
-            area = (label == i).sum()
-            if area < class_ratio * mask.shape[0] * mask.shape[1]:
-                mask[label == i] = 0
-        return mask
+    def resize(self, image: np.ndarray, imsize: int = 640) -> np.ndarray:
+        f = imsize / min(image.shape[:2])
+        image = iaa.Resize(size=f)(image=image)
+        image = iaa.CropToFixedSize(width=imsize, height=imsize, position='center')(image=image)
+
+        return image
+
+    def draw_polygon(
+        title: Optional[str], image: np.ndarray, points: List[Tuple[int, int]],
+        color: Tuple[int, int, int], title_position: str = 'bottom_left'  # top_left, bottom_left
+    ) -> None:
+        cv2.polylines(
+            img=image, pts=[points], isClosed=True, color=color, thickness=max(1, max(image.shape) // 500)
+        )
+
+        if title is not None:
+            font_scale = max(image.shape) / 1200
+            thickness = max(1, max(image.shape) // 600)
+            w, h = cv2.getTextSize(title, cv2.FONT_HERSHEY_PLAIN, font_scale, thickness)[0]
+
+            if title_position == 'bottom_left':
+                title_box = [(points[0][0], points[0][1]),
+                             (points[0][0] + w, points[0][1] + int(1.5 * h))]
+                title_pos = (points[0][0], points[0][1] + int(1.3 * h))
+            elif title_position == 'top_left':
+                title_box = [(points[0][0], points[0][1]),
+                             (points[0][0] + w, max(0, points[0][1] - int(1.5 * h)))]
+                title_pos = (points[0][0], max(0, points[0][1] - int(0.3 * h)))
+
+            cv2.rectangle(img=image, pt1=title_box[0], pt2=title_box[1], color=color, thickness=-1)
+
+            cv2.putText(
+                img=image, text=title, org=title_pos,
+                fontFace=cv2.FONT_HERSHEY_PLAIN, fontScale=font_scale,
+                color=(255, 255, 255), thickness=thickness, lineType=cv2.LINE_AA
+            )

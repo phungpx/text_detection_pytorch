@@ -107,7 +107,7 @@ class PANDataset(Dataset):
 
         image, label = self.augmenter.apply(
             image=image, label=label,
-            augmenter=iaa.CropToFixedSize(width=imsize, height=imsize, position='uniform')
+            augmenter=iaa.CropToFixedSize(width=imsize, height=imsize, position='center')
         )
 
         return image, label
