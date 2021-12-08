@@ -27,7 +27,7 @@ class SeparableConv2D(nn.Module):
             stride=1,
         )
         self.bn = nn.BatchNorm2d(num_features=out_channels)
-        self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.ReLU()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.depthwise(x)
@@ -53,7 +53,7 @@ class ConvBNReLU(nn.Module):
             stride=stride,
         )
         self.bn = nn.BatchNorm2d(num_features=out_channels)
-        self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.ReLU()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.relu(self.bn(self.conv(x)))

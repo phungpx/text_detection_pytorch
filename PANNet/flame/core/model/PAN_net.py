@@ -1,5 +1,9 @@
+import torch
+
+import numpy as np
 from torch import nn
 from typing import List, Tuple
+
 from .resnet import ResNet
 from .seg_head import FPEM_FFM
 
@@ -89,7 +93,7 @@ class PANNet(nn.Module):
 
         return boxes
 
-    def unshrink_polygon(self, points, r: float = 0.5) -> List[List[Tuple[float, float]]]:
+    def unshrink_polygon(self, points: List[Tuple[float, float]], r: float = 0.5) -> List[List[Tuple[float, float]]]:
         offseter = pyclipper.PyclipperOffset()
 
         poly = Polygon(points)

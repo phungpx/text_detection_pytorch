@@ -1,8 +1,10 @@
-from torch import nn
+import torch
+from typing import Callable
+
+from . import loss
 from .l_dis import DistanceLoss
 from .l_agg import AggregationLoss
 from .l_tex_ker import TextKernelLoss
-from . import loss
 
 
 class PANLoss(loss.LossBase):
@@ -14,7 +16,7 @@ class PANLoss(loss.LossBase):
         delta_dis: float = 3,
         ohem_ratio: float = 3,
         reduction: str = 'mean',
-        output_transform: lambda x: x,
+        output_transform: Callable = lambda x: x,
     ):
         super(PANLoss, self).__init__(output_transform)
         self.alpha = alpha
@@ -24,7 +26,7 @@ class PANLoss(loss.LossBase):
         self.agg_loss_fn = AggregationLoss(delta_agg=delta_agg)
         self.text_kernel_loss_fn = TextKernelLoss(ohem_ratio=ohem_ratio)
 
-    def forward(self, preds, targets):
+    def forward(self, preds: torch.Tensor, targets: torch.Tensor):
         agg_loss = self.agg_loss_fn(preds, targets)
         dis_loss = self.dis_loss_fn(preds, targets)
         text_loss, kernel_loss = self.text_kernel_loss_fn(preds, targets)
@@ -46,9 +48,9 @@ class PANLoss(loss.LossBase):
 
         loss = text_loss + self.alpha * kernel_loss + self.beta * (agg_loss + dis_loss)
 
-        print(f'aggregation loss: {agg_loss}')
-        print(f'distance loss: {dis_loss}')
-        print(f'text region loss: {text_loss}')
-        print(f'kernel loss: {kernel_loss}')
+        # print(f'aggregation loss: {agg_loss}')
+        # print(f'distance loss: {dis_loss}')
+        # print(f'text region loss: {text_loss}')
+        # print(f'kernel loss: {kernel_loss}')
 
         return loss

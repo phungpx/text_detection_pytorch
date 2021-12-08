@@ -44,9 +44,4 @@ class PANLoss(nn.Module):
 
         loss = text_loss + self.alpha * kernel_loss + self.beta * (agg_loss + dis_loss)
 
-        print(f'aggregation loss: {agg_loss}')
-        print(f'distance loss: {dis_loss}')
-        print(f'text region loss: {text_loss}')
-        print(f'kernel loss: {kernel_loss}')
-
-        return loss
+        return loss, agg_loss, dis_loss, text_loss, kernel_loss

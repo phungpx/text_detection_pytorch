@@ -127,9 +127,6 @@ class PANDataset(Dataset):
         shrinker = pyclipper.PyclipperOffset()
 
         poly = Polygon(points)
-        if not poly.is_valid:
-            raise ValueError('must be valid polygon.')
-
         # d = poly.area * (1 - r ** 2) / poly.length
         d = poly.area * (1 - r) / poly.length
 
@@ -157,6 +154,13 @@ class PANDataset(Dataset):
             else:
                 continue
 
+            polygon = self.to_valid_poly(points, image_height=height, image_width=width)
+
+            poly = Polygon(polygon)
+            if (not poly.is_valid) or (poly.length == 0) or (poly.area == 0):
+                # raise ValueError('must be valid polygon.')
+                continue
+
             # get text boxes after transformers for evaluation
             text_boxes.append(
                 {
@@ -167,7 +171,6 @@ class PANDataset(Dataset):
             )
 
             # text region map
-            polygon = self.to_valid_poly(points, image_height=height, image_width=width)
             cv2.fillPoly(img=text_map, pts=[np.int32(polygon)], color=text_id + 1)
 
             # shrinked kernel map
