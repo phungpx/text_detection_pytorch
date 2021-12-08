@@ -29,12 +29,14 @@ class ICDAR2015(Dataset):
         label_extent: str = '.json',
         transforms: Optional[List] = None,
         require_transforms: Optional[List] = None,
+        ignore_blur_text: bool = True,
     ) -> None:
         super(ICDAR2015, self).__init__()
         self.imsize = imsize
         self.augmenter = Augmenter()
-        self.shrink_ratio = shrink_ratio
         self.max_shrink = max_shrink
+        self.shrink_ratio = shrink_ratio
+        self.ignore_blur_text = ignore_blur_text
         self.transforms = transforms if transforms else []
         self.require_transforms = require_transforms if require_transforms else []
 
@@ -139,13 +141,13 @@ class ICDAR2015(Dataset):
                 continue
 
             # get text boxes after transformers for evaluation
-            text_boxes.append(
-                {
-                    'points': points,
-                    'text': shape.get('value', '###'),
-                    'ignore': True if shape.get('value', '###') == '###' else False,
-                }
-            )
+            text_box = {
+                'points': points,
+                'text': shape.get('value', '###'),
+                'ignore': True if shape.get('value', '###') == '###' else False,
+            }
+            if not self.ignore_blur_text:
+                text_box['ignore'] = False
 
             # text region map
             cv2.fillPoly(img=text_map, pts=[np.int32(points)], color=text_id + 1)
@@ -155,6 +157,7 @@ class ICDAR2015(Dataset):
             cv2.fillPoly(img=kernel_map, pts=np.int32(shrunk_polygons), color=text_id + 1)
 
             text_id += 1
+            text_boxes.append(text_box)
 
         ignored_polys = [text_box['points'] for text_box in text_boxes if text_box['ignore']]
         effective_map = self.generate_effective_map(
@@ -196,10 +199,12 @@ class ICDAR2015(Dataset):
         Args:
             mask_height (int): the height of mask size.
             mask_width (int): the width of mask size.
-            ignored_polys (list[[ndarray]]: The list of ignored text polygons.
+            ignored_polys (List[List[Tuple[float, float]]]: The list of ignored text polygons.
         Returns:
             mask (ndarray): The effective mask of (height, width).
         """
         mask = np.ones(shape=(mask_height, mask_width), dtype=np.uint8)
-        cv2.fillPoly(img=mask, pts=np.int32(ignored_polys), color=0)
+        if len(ignored_polys):
+            cv2.fillPoly(img=mask, pts=np.int32(ignored_polys), color=0)
+
         return mask
