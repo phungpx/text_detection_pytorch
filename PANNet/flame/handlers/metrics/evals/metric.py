@@ -1,3 +1,4 @@
+import json
 import torch
 
 from ignite.metrics import Metric
@@ -6,9 +7,9 @@ from ignite.exceptions import NotComputableError
 from .iou import DetectionIoUEvaluator
 
 
-class IOU(Metric):
+class HMean(Metric):
     def __init__(self, output_transform=lambda x: x):
-        super(IOU, self).__init__(output_transform)
+        super(HMean, self).__init__(output_transform)
         self.evaluator = DetectionIoUEvaluator()
 
     def reset(self):
@@ -27,12 +28,15 @@ class IOU(Metric):
             None
         '''
         pred_boxes, _, _, image_infos = output
-        true_boxes = image_infos['text_boxes']
+        true_boxes = [image_info['text_boxes'] for image_info in image_infos]
 
-        self.trues.append(true_boxes)
-        self.preds.append(pred_boxes)
+        self.trues.extend(true_boxes)
+        self.preds.extend(pred_boxes)
 
     def compute(self):
         results = [self.evaluator.evaluate_image(true, pred) for true, pred in zip(self.trues, self.preds)]
-        metrics = evaluator.combine_results(results)
-        print(metrics)
+        metrics = self.evaluator.combine_results(results)
+
+        print(json.dumps(metrics, ensure_ascii=False, indent=4))
+
+        return metrics['hmean']

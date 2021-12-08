@@ -1,8 +1,10 @@
+import cv2
 import torch
-
+import pyclipper
 import numpy as np
 from torch import nn
 from typing import List, Tuple
+from shapely.geometry import Polygon
 
 from .resnet import ResNet
 from .seg_head import FPEM_FFM
@@ -27,6 +29,8 @@ class PANNet(nn.Module):
         shrink_ratio: float = 0.5,
     ):
         super(PANNet, self).__init__()
+        self.shrink_ratio = shrink_ratio
+        self.binary_threshold = binary_threshold
         self.resnet = ResNet(
             backbone_name=backbone_name,
             pretrained=backbone_pretrained

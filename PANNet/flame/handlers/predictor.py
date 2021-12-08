@@ -1,8 +1,11 @@
 import cv2
 import torch
 import numpy as np
+import imgaug.augmenters as iaa
+
 from pathlib import Path
 from ignite.engine import Events
+from typing import Optional, List, Tuple
 
 from ..module import Module
 
@@ -36,16 +39,16 @@ class Predictor(Module):
         for pred_boxes, true_boxes, image_name, image_size in zip(preds_boxes, trues_boxes, image_names, image_sizes):
             image_path = self.output_dir.joinpath(Path(image_name).name)
 
-            image = cv2.imread(image_name)
+            pred_image = cv2.imread(image_name)
             image = self.resize(image, imsize=self.imsize)
 
             for box in pred_boxes:
-                draw_polygon(image=image, points=box['points'], color=(0, 0, 255))
+                self.draw_polygon(image=image, points=box['points'], color=(0, 0, 255))
 
             for box in true_boxes:
-                draw_polygon(image=image, points=box['points'], color=(0, 255, 0))
+                self.draw_polygon(image=image, points=box['points'], color=(0, 255, 0))
 
-            cv2.imwrite(image_path, image)
+            cv2.imwrite(str(image_path), image)
 
     def compute(self):
         pass
@@ -76,11 +79,15 @@ class Predictor(Module):
         return image
 
     def draw_polygon(
-        title: Optional[str], image: np.ndarray, points: List[Tuple[int, int]],
-        color: Tuple[int, int, int], title_position: str = 'bottom_left'  # top_left, bottom_left
+        self,
+        image: np.ndarray,
+        points: List[Tuple[int, int]],
+        color: Tuple[int, int, int],
+        title_position: str = 'bottom_left',  # top_left, bottom_left
+        title: Optional[str] = None,
     ) -> None:
         cv2.polylines(
-            img=image, pts=[points], isClosed=True, color=color, thickness=max(1, max(image.shape) // 500)
+            img=image, pts=[np.int32(points)], isClosed=True, color=color, thickness=max(1, max(image.shape) // 500)
         )
 
         if title is not None:
