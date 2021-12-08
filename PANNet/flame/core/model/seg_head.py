@@ -74,7 +74,7 @@ class FPEM(nn.Module):
         self.conv3x3_down3 = SeparableConv2D(in_channels, in_channels, kernel_size=3, stride=2)
 
     def upsample_add(self, x1: torch.Tensor, x2: torch.Tensor) -> torch.Tensor:
-        x = nn.functional.interpolate(x1, size=x2.shape[2:], mode='bilinear') + x2
+        x = nn.functional.interpolate(x1, size=x2.shape[2:], mode='bilinear', align_corners=True) + x2
         return x
 
     def forward(self, features: Tuple[torch.Tensor]) -> Tuple[torch.Tensor]:
@@ -168,9 +168,9 @@ class FPEM_FFM(nn.Module):
                 c5_ffm += c5
 
         # FFM
-        c5_ffm = nn.functional.interpolate(c5_ffm, size=c2_ffm.shape[2:], mode='bilinear')
-        c4_ffm = nn.functional.interpolate(c4_ffm, size=c2_ffm.shape[2:], mode='bilinear')
-        c3_ffm = nn.functional.interpolate(c3_ffm, size=c2_ffm.shape[2:], mode='bilinear')
+        c5_ffm = nn.functional.interpolate(c5_ffm, size=c2_ffm.shape[2:], mode='bilinear', align_corners=True)
+        c4_ffm = nn.functional.interpolate(c4_ffm, size=c2_ffm.shape[2:], mode='bilinear', align_corners=True)
+        c3_ffm = nn.functional.interpolate(c3_ffm, size=c2_ffm.shape[2:], mode='bilinear', align_corners=True)
         Fy = torch.cat([c2_ffm, c3_ffm, c4_ffm, c5_ffm], dim=1)   # N x 512 x H / 4 x W / 4
 
         # Final

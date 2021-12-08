@@ -1,5 +1,6 @@
-from ignite.exceptions import NotComputableError
+from prettytable import PrettyTable
 from ignite.metrics.metric import Metric
+from ignite.exceptions import NotComputableError
 
 
 class Loss(Metric):
@@ -36,9 +37,24 @@ class Loss(Metric):
         if self._num_examples == 0:
             raise NotComputableError('Loss must have at least one example before it can be computed.')
 
-        print(f'aggregation loss: {self._agg_loss / self._num_examples}')
-        print(f'distance loss: {self._dis_loss / self._num_examples}')
-        print(f'text region loss: {self._text_loss / self._num_examples}')
-        print(f'kernel loss: {self._kernel_loss / self._num_examples}')
+        loss_stats = PrettyTable(
+            [
+                'aggregation loss',
+                'distance loss',
+                'text region loss',
+                'kernel loss',
+            ]
+        )
+
+        loss_stats.add_row(
+            [
+                self._agg_loss / self._num_examples,
+                self._dis_loss / self._num_examples,
+                self._text_loss / self._num_examples,
+                self._kernel_loss / self._num_examples,
+            ]
+        )
+
+        print(loss_stats)
 
         return self._sum / self._num_examples
