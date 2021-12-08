@@ -1,4 +1,7 @@
+import torch
 from torch import nn
+from typing import Callable
+
 from .l_dis import DistanceLoss
 from .l_agg import AggregationLoss
 from .l_tex_ker import TextKernelLoss
@@ -22,10 +25,10 @@ class PANLoss(nn.Module):
         self.agg_loss_fn = AggregationLoss(delta_agg=delta_agg)
         self.text_kernel_loss_fn = TextKernelLoss(ohem_ratio=ohem_ratio)
 
-    def forward(self, preds, targets):
+    def forward(self, preds: torch.Tensor, targets: torch.Tensor, effective_maps: torch.Tensor):
         agg_loss = self.agg_loss_fn(preds, targets)
         dis_loss = self.dis_loss_fn(preds, targets)
-        text_loss, kernel_loss = self.text_kernel_loss_fn(preds, targets)
+        text_loss, kernel_loss = self.text_kernel_loss_fn(preds, targets, effective_maps)
 
         if self.reduction == 'mean':
             agg_loss = agg_loss.mean()

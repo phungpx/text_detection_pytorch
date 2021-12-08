@@ -11,21 +11,21 @@ class DistanceLoss(nn.Module):
     def forward(self, preds: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
         '''
         Args:
-            preds: Tensor, N x 6 x H / 4 x W / 4  (stride 4 compare to input size)
-            targets: Tensor, N x 2 x H / 4 x W / 4
-        Output:
+            preds: Tensor, N x 6 x H x W
+            targets: Tensor, N x 2 x H x W
+        Returns:
             distance_loss: float
         '''
         num_samples = preds.shape[0]
 
-        similarity_vectors = preds[:, 2:, :, :]  # N x 4 x W' x H'
-        similarity_vectors = similarity_vectors.reshape(num_samples, 4, -1)  # N x 4 x (H' * W')
+        similarity_vectors = preds[:, 2:, :, :]  # N x 4 x H x W
+        similarity_vectors = similarity_vectors.reshape(num_samples, 4, -1)  # N x 4 x (H * W)
 
         target_texts = targets[:, 0, :, :]
-        target_texts = target_texts.reshape(num_samples, -1)  # N x (H' * W')
+        target_texts = target_texts.reshape(num_samples, -1)  # N x (H * W)
 
         target_kernels = targets[:, 1, :, :]
-        target_kernels = target_kernels.reshape(num_samples, -1)  # N x (H' * W')
+        target_kernels = target_kernels.reshape(num_samples, -1)  # N x (H * W)
 
         dis_losses = []
         for id_sample in range(num_samples):

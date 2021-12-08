@@ -4,15 +4,16 @@ data:
     class: DataLoader
     DataLoader:
       dataset:
-        module: flame.core.data.PAN_dataset
-        class: PANDataset
-        PANDataset:
+        module: flame.core.data.icdar_2015
+        class: ICDAR2015
+        ICDAR2015:
           dirnames:
             - '''../dataset/incidental_scene_text_2015/test/'''
           imsize: 640
-          mean: '(0., 0., 0.)'
-          std: '(1., 1., 1.)'
+          mean: '(0.485, 0.456, 0.406)'
+          std: '(0.229, 0.224, 0.225)'
           shrink_ratio: 0.5
+          max_shrink: 20
           image_extents: ['''.jpg''', '''.png''', '''.jpeg''', '''.JPG''', '''.PNG''', '''.JPEG''']
           label_extent: '''.json'''
       batch_size: 8
@@ -27,7 +28,7 @@ model:
   class: PANNet
   PANNet:
     backbone_name: '''resnet18'''
-    backbone_pretrained: True
+    backbone_pretrained: False
     num_FPEMs: 2
     binary_threshold: 0.5
     shrink_ratio: 0.5
@@ -41,7 +42,7 @@ metrics:
         module: flame.handlers.metrics.evals.metric
         class: IOU
         IOU:
-          output_transform: 'lambda x: (x[0], x[-1])'
+          output_transform: 'lambda x: (x[0], x[1], x[2], x[3])'
     attach_to:
       engine: '''test'''
 

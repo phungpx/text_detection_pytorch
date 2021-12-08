@@ -54,6 +54,7 @@ class Trainer(Engine):
         params = [param.to(self.device) if torch.is_tensor(param) else param for param in batch]
         params[0] = torch.stack([image.to(self.device) for image in params[0]], dim=0)  # N x 3 x H x W
         params[1] = torch.stack([masks.to(self.device) for masks in params[1]], dim=0)  # N x 2 x H x W
+        params[2] = torch.stack([eff_map.to(self.device) for eff_map in params[2]], dim=0)  # N x H x W
 
         params[0] = self.model(params[0])
         loss = self.loss(*params)
@@ -119,6 +120,7 @@ class Evaluator(Engine):
             params = [param.to(self.device) if torch.is_tensor(param) else param for param in batch]
             params[0] = torch.stack([image.to(self.device) for image in params[0]], dim=0)  # N x 3 x H x W
             params[1] = torch.stack([masks.to(self.device) for masks in params[1]], dim=0)  # N x 2 x H x W
+            params[2] = torch.stack([eff_map.to(self.device) for eff_map in params[2]], dim=0)  # N x H x W
 
             params[0] = self.model(params[0])
 

@@ -26,10 +26,10 @@ class PANLoss(loss.LossBase):
         self.agg_loss_fn = AggregationLoss(delta_agg=delta_agg)
         self.text_kernel_loss_fn = TextKernelLoss(ohem_ratio=ohem_ratio)
 
-    def forward(self, preds: torch.Tensor, targets: torch.Tensor):
+    def forward(self, preds: torch.Tensor, targets: torch.Tensor, effective_maps: torch.Tensor):
         agg_loss = self.agg_loss_fn(preds, targets)
         dis_loss = self.dis_loss_fn(preds, targets)
-        text_loss, kernel_loss = self.text_kernel_loss_fn(preds, targets)
+        text_loss, kernel_loss = self.text_kernel_loss_fn(preds, targets, effective_maps)
 
         if self.reduction == 'mean':
             agg_loss = agg_loss.mean()
@@ -47,10 +47,5 @@ class PANLoss(loss.LossBase):
             raise NotImplementedError
 
         loss = text_loss + self.alpha * kernel_loss + self.beta * (agg_loss + dis_loss)
-
-        # print(f'aggregation loss: {agg_loss}')
-        # print(f'distance loss: {dis_loss}')
-        # print(f'text region loss: {text_loss}')
-        # print(f'kernel loss: {kernel_loss}')
 
         return loss

@@ -142,7 +142,7 @@ class FPEM_FFM(nn.Module):
             c3: Tensor, N x C2 x H / 8 x W / 8
             c4: Tensor, N x C2 x H / 16 x W / 16
             c5: Tensor, N x C2 x H / 32 x W / 32
-        Output:
+        Returns:
             Tensor, N x 6 x H / 4 x W / 4
         '''
         c2, c3, c4, c5 = x

@@ -18,13 +18,15 @@ class IOU(Metric):
     def update(self, output):
         '''
         Args:
-            output: tuple(pred, target, image_infos)
-                .pred: N x 1 x H x W
-                .target: N x H x W
+            output: tuple(preds, targets, effective_maps, image_infos)
+                .preds: N x 6 x H x W
+                .targets: N x 2 x H x W
+                .effective_maps: N x H x W
+                .image_infos: tuple(dictionary)
         Return:
             None
         '''
-        pred_boxes, image_infos = output
+        pred_boxes, _, _, image_infos = output
         true_boxes = image_infos['text_boxes']
 
         self.trues.append(true_boxes)

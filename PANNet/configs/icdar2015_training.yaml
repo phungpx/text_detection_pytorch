@@ -4,29 +4,30 @@ data:
     class: DataLoader
     DataLoader:
       dataset:
-        module: flame.core.data.PAN_dataset
-        class: PANDataset
-        PANDataset:
+        module: flame.core.data.icdar_2015
+        class: ICDAR2015
+        ICDAR2015:
           dirnames:
             - '''../dataset/incidental_scene_text_2015/train/'''
           imsize: 640
-          mean: '(0., 0., 0.)'
-          std: '(1., 1., 1.)'
+          mean: '(0.485, 0.456, 0.406)'
+          std: '(0.229, 0.224, 0.225)'
           shrink_ratio: 0.5
+          max_shrink: 20
           image_extents: ['''.jpg''', '''.png''', '''.jpeg''', '''.JPG''', '''.PNG''', '''.JPEG''']
           label_extent: '''.json'''
           transforms:
             # - iaa.Add(value=(-100, 100), per_channel=True)
             # - iaa.GaussianBlur(sigma=(0, 1))
             # - iaa.MotionBlur()
-            - iaa.Affine(rotate=(0, 360), shear=(-20, 20), fit_output=True)
+            # - iaa.Affine(rotate=(0, 360), shear=(-20, 20), fit_output=True)
             # - iaa.PerspectiveTransform(scale=(0, 0.1))
-            - iaa.Crop(percent=(0, 0.1))
-            - iaa.Pad(percent=(0, 0.1))
-            - iaa.JpegCompression(compression=(0, 30))
-            - iaa.Rot90(k=[0, 1, 2, 3], keep_size=False)
+            # - iaa.Crop(percent=(0, 0.1))
+            # - iaa.Pad(percent=(0, 0.1))
+            # - iaa.JpegCompression(compression=(0, 30))
+            # - iaa.Rot90(k=[0, 1, 2, 3], keep_size=False)
             - iaa.Fliplr(p=0.5)
-            - iaa.Flipud(p=0.5)
+            # - iaa.Flipud(p=0.5)
             # - iaa.Grayscale(alpha=(0.0, 1.0))
             # - iaa.ChangeColorTemperature()
             # - iaa.Clouds()
@@ -46,15 +47,16 @@ data:
     class: DataLoader
     DataLoader:
       dataset:
-        module: flame.core.data.PAN_dataset
-        class: PANDataset
-        PANDataset:
+        module: flame.core.data.icdar_2015
+        class: ICDAR2015
+        ICDAR2015:
           dirnames:
             - '''../dataset/incidental_scene_text_2015/train/'''
           imsize: 640
-          mean: '(0., 0., 0.)'
-          std: '(1., 1., 1.)'
+          mean: '(0.485, 0.456, 0.406)'
+          std: '(0.229, 0.224, 0.225)'
           shrink_ratio: 0.5
+          max_shrink: 20
           image_extents: ['''.jpg''', '''.png''', '''.jpeg''', '''.JPG''', '''.PNG''', '''.JPEG''']
           label_extent: '''.json'''
       batch_size: 8
@@ -69,15 +71,16 @@ data:
     class: DataLoader
     DataLoader:
       dataset:
-        module: flame.core.data.PAN_dataset
-        class: PANDataset
-        PANDataset:
+        module: flame.core.data.icdar_2015
+        class: ICDAR2015
+        ICDAR2015:
           dirnames:
             - '''../dataset/incidental_scene_text_2015/test/'''
           imsize: 640
-          mean: '(0., 0., 0.)'
-          std: '(1., 1., 1.)'
+          mean: '(0.485, 0.456, 0.406)'
+          std: '(0.229, 0.224, 0.225)'
           shrink_ratio: 0.5
+          max_shrink: 20
           image_extents: ['''.jpg''', '''.png''', '''.jpeg''', '''.JPG''', '''.PNG''', '''.JPEG''']
           label_extent: '''.json'''
       batch_size: 8
@@ -97,7 +100,7 @@ loss:
     delta_dis: 3
     ohem_ratio: 3
     reduction: '''mean'''
-    output_transform: 'lambda x: (x[0], x[1])'
+    output_transform: 'lambda x: (x[0], x[1], x[2])'
 
 model:
   module: flame.core.model.PAN_net
@@ -106,8 +109,6 @@ model:
     backbone_name: '''resnet18'''
     backbone_pretrained: True
     num_FPEMs: 2
-    # binary_threshold: 0.5
-    # shrink_ratio: 0.5
 
 optim:
   module: torch.optim
@@ -151,7 +152,7 @@ metrics:
               delta_dis: 3
               ohem_ratio: 3
               reduction: '''mean'''
-          output_transform: 'lambda x: (x[0], x[1])'
+          output_transform: 'lambda x: (x[0], x[1], x[2])'
     attach_to:
       train_evaluator: '''train'''
       valid_evaluator: '''valid'''
@@ -186,7 +187,7 @@ lr_scheduler:
     score_name: '''pan_loss'''
     evaluator_name: '''valid_evaluator'''
     mode: '''min'''
-    patience: 5
+    patience: 10
     verbose: True
 
 early_stopping:
@@ -196,7 +197,7 @@ early_stopping:
     score_name: '''pan_loss'''
     evaluator_name: '''valid_evaluator'''
     mode: '''min'''
-    patience: 20
+    patience: 50
 
 best_saver:
   module: flame.handlers.checkpoint

@@ -97,9 +97,8 @@ class PANNet(nn.Module):
         offseter = pyclipper.PyclipperOffset()
 
         poly = Polygon(points)
-        d = poly.area * (1 + r) / poly.length
+        d = round(poly.area * (1 + r ** 2) / poly.length)
 
-        points = [tuple(point) for point in points]
         offseter.AddPath(points, pyclipper.JT_ROUND, pyclipper.ET_CLOSEDPOLYGON)
         polys = offseter.Execute(d)
 

@@ -8,12 +8,13 @@ class TextKernelLoss(nn.Module):
         self.epsilon = epsilon
         self.ohem_ratio = ohem_ratio
 
-    def forward(self, preds: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
+    def forward(self, preds: torch.Tensor, targets: torch.Tensor, effective_maps: torch.Tensor) -> torch.Tensor:
         '''
         Args:
-            preds: Tensor, N x 6 x H / 4 x W / 4  (stride 4 compare to input size)
-            targets: Tensor, N x 2 x H / 4 x W / 4
-        Output:
+            preds: Tensor, N x 6 x H x W
+            targets: Tensor, N x 2 x H x W
+            effective_maps: Tensor, N x H x W
+        Returns:
             distance_loss: float
         '''
         pred_texts = torch.sigmoid(preds[:, 0, :, :])
@@ -22,29 +23,25 @@ class TextKernelLoss(nn.Module):
         target_texts = targets[:, 0, :, :]
         target_kernels = targets[:, 1, :, :]
 
-        training_masks = torch.where(
-            target_texts == 0, torch.ones_like(target_texts), torch.zeros_like(target_texts)
-        )
-
         # text region loss
-        selected_masks = self.ohem_batch(pred_texts, target_texts, training_masks).to(preds.device)
+        selected_masks = self.ohem_batch(pred_texts, target_texts, effective_maps).to(preds.device)
         text_loss = self.dice_loss(pred_texts, target_texts, selected_masks)
 
         # kernel loss
-        selected_masks = ((pred_texts > 0.5) & (training_masks > 0.5)).float().to(preds.device)
+        selected_masks = ((pred_texts > 0.5) & (effective_maps > 0.5)).float().to(preds.device)
         kernel_loss = self.dice_loss(pred_kernels, target_kernels, selected_masks)
 
         return text_loss, kernel_loss
 
-    def dice_loss(self, pred, target, mask):
+    def dice_loss(self, pred, target, effective_map):
         target[target > 0.5] = 1
         target[target <= 0.5] = 0
 
         pred = pred.view(pred.shape[0], -1)
         target = target.view(target.shape[0], -1)
-        mask = mask.view(mask.shape[0], -1)
+        effective_map = effective_map.view(effective_map.shape[0], -1)
 
-        pred, target = pred * mask, target * mask
+        pred, target = pred * effective_map, target * effective_map
 
         PG = torch.sum(pred * target, dim=1)
         P2 = torch.sum(pred ** 2, dim=1)
@@ -54,29 +51,29 @@ class TextKernelLoss(nn.Module):
 
         return 1 - dice
 
-    def ohem(self, pred_text, target_text, training_mask):
-        positive_number = torch.sum(target_text > 0.5) - torch.sum((target_text > 0.5) & (training_mask <= 0.5))
+    def ohem(self, pred_text, target_text, effective_map):
+        positive_number = torch.sum(target_text > 0.5) - torch.sum((target_text > 0.5) & (effective_map <= 0.5))
         if positive_number.item() == 0:
-            return training_mask.float()
+            return effective_map.float()
 
         negative_number = torch.sum(target_text <= 0.5)
         negative_number = torch.min(positive_number * self.ohem_ratio, negative_number)
         if negative_number.item() == 0:
-            return training_mask.float()
+            return effective_map.float()
 
         negative_scores = pred_text[target_text <= 0.5]
         negative_scores = torch.sort(negative_scores, descending=True)[0]
         score_threshold = negative_scores[negative_number - 1]
 
-        selected_mask = ((pred_text >= score_threshold) | (target_text > 0.5)) & (training_mask > 0.5)
+        selected_mask = ((pred_text >= score_threshold) | (target_text > 0.5)) & (effective_map > 0.5)
 
         return selected_mask.float()
 
-    def ohem_batch(self, pred_texts, target_texts, training_masks):
+    def ohem_batch(self, pred_texts, target_texts, effective_maps):
         selected_masks = []
         for i in range(pred_texts.shape[0]):
             selected_masks.append(
-                self.ohem(pred_texts[i, :, :], target_texts[i, :, :], training_masks[i, :, :])
+                self.ohem(pred_texts[i, :, :], target_texts[i, :, :], effective_maps[i, :, :])
             )
 
         selected_masks = torch.stack(selected_masks, dim=0)
