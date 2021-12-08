@@ -57,7 +57,7 @@ checkpoint_loader:
   module: flame.handlers.checkpoint
   class: CheckpointLoader
   CheckpointLoader:
-    checkpoint_path: '''checkpoint/incidental_scene_text_2015/2112081529/best_model_13_pan_loss=-0.6175.pt'''
+    checkpoint_path: '''checkpoint/incidental_scene_text_2015/2112081529/best_model_23_pan_loss=-0.5996.pt'''
     mode: '''test'''
 
 predictor:
@@ -66,7 +66,7 @@ predictor:
   Predictor:
     evaluator_name: '''engine'''
     imsize: 640
-    output_dir: '''checkpoint/incidental_scene_text_2015/2112081529/best_model_13_pan_loss=-0.6175/test/'''
+    output_dir: '''checkpoint/incidental_scene_text_2015/2112081529/best_model_23_pan_loss=-0.5996/test/'''
     output_transform: 'lambda x: (x[0], x[-1])'
 
 engine:

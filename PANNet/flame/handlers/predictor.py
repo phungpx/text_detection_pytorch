@@ -37,18 +37,19 @@ class Predictor(Module):
         image_sizes = [image_info['image_size'] for image_info in image_infos]
 
         for pred_boxes, true_boxes, image_name, image_size in zip(preds_boxes, trues_boxes, image_names, image_sizes):
-            image_path = self.output_dir.joinpath(Path(image_name).name)
+            true_image = cv2.imread(image_name)
+            true_image = self.resize(true_image, imsize=self.imsize)
 
             pred_image = cv2.imread(image_name)
-            image = self.resize(image, imsize=self.imsize)
-
-            for box in pred_boxes:
-                self.draw_polygon(image=image, points=box['points'], color=(0, 0, 255))
+            pred_image = self.resize(pred_image, imsize=self.imsize)
 
             for box in true_boxes:
-                self.draw_polygon(image=image, points=box['points'], color=(0, 255, 0))
+                self.draw_polygon(image=true_image, points=box['points'], color=(0, 255, 0))
+            cv2.imwrite(str(self.output_dir.joinpath(f'{Path(image_name).stem}_gt{Path(image_name).suffix}')), true_image)
 
-            cv2.imwrite(str(image_path), image)
+            for box in pred_boxes:
+                self.draw_polygon(image=pred_image, points=box['points'], color=(0, 0, 255))
+            cv2.imwrite(str(self.output_dir.joinpath(f'{Path(image_name).stem}_pred{Path(image_name).suffix}')), pred_image)
 
     def compute(self):
         pass
