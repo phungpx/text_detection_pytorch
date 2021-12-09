@@ -10,14 +10,14 @@ data:
           dirnames:
             - '''../dataset/incidental_scene_text_2015/test/'''
           imsize: 640
-          mean: '(0.485, 0.456, 0.406)'
-          std: '(0.229, 0.224, 0.225)'
+          mean: '(0., 0., 0.)'
+          std: '(1., 1., 1.)'
           shrink_ratio: 0.5
           max_shrink: 20
-          ignore_blur_text: False
+          ignore_blur_text: True
           image_extents: ['''.jpg''', '''.png''', '''.jpeg''', '''.JPG''', '''.PNG''', '''.JPEG''']
           label_extent: '''.json'''
-      batch_size: 8
+      batch_size: 4
       shuffle: False
       pin_memory: True
       num_workers: 12
@@ -58,7 +58,7 @@ checkpoint_loader:
   module: flame.handlers.checkpoint
   class: CheckpointLoader
   CheckpointLoader:
-    checkpoint_path: '''checkpoint/incidental_scene_text_2015/2112081529/best_model_23_pan_loss=-0.5996.pt'''
+    checkpoint_path: '''checkpoint/incidental_scene_text_2015/2112091422/best_model_51_pan_loss=-0.5370.pt'''
     mode: '''test'''
 
 predictor:
@@ -67,7 +67,7 @@ predictor:
   Predictor:
     evaluator_name: '''engine'''
     imsize: 640
-    output_dir: '''checkpoint/incidental_scene_text_2015/2112081529/best_model_23_pan_loss=-0.5996/test/'''
+    output_dir: '''checkpoint/incidental_scene_text_2015/2112091422/best_model_51_pan_loss=-0.5370/test/'''
     output_transform: 'lambda x: (x[0], x[-1])'
 
 engine:
