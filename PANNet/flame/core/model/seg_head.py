@@ -168,9 +168,15 @@ class FPEM_FFM(nn.Module):
                 c5_ffm += c5
 
         # FFM
-        c5_ffm = nn.functional.interpolate(c5_ffm, size=c2_ffm.shape[2:], mode='bilinear', align_corners=True)
-        c4_ffm = nn.functional.interpolate(c4_ffm, size=c2_ffm.shape[2:], mode='bilinear', align_corners=True)
-        c3_ffm = nn.functional.interpolate(c3_ffm, size=c2_ffm.shape[2:], mode='bilinear', align_corners=True)
+        c5_ffm = nn.functional.interpolate(
+            c5_ffm, size=c2_ffm.shape[2:], mode='bilinear', align_corners=True
+        )
+        c4_ffm = nn.functional.interpolate(
+            c4_ffm, size=c2_ffm.shape[2:], mode='bilinear', align_corners=True
+        )
+        c3_ffm = nn.functional.interpolate(
+            c3_ffm, size=c2_ffm.shape[2:], mode='bilinear', align_corners=True
+        )
         Fy = torch.cat([c2_ffm, c3_ffm, c4_ffm, c5_ffm], dim=1)   # N x 512 x H / 4 x W / 4
 
         # Final

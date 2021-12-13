@@ -31,25 +31,31 @@ class Predictor(Module):
         pass
 
     def update(self, output):
-        preds_boxes, image_infos = output
+        pred_infos, image_infos = output
+        text_masks = [pred_info['text_mask'] for pred_info in pred_infos]
+        kernel_masks = [pred_info['kernel_mask'] for pred_info in pred_infos]
+        pred_boxes = [pred_info['text_boxes'] for pred_info in pred_infos]
+
         trues_boxes = [image_info['text_boxes'] for image_info in image_infos]
+        images = [image_info['image'] for image_info in image_infos]
         image_names = [image_info['image_path'] for image_info in image_infos]
         image_sizes = [image_info['image_size'] for image_info in image_infos]
 
-        for pred_boxes, true_boxes, image_name, image_size in zip(preds_boxes, trues_boxes, image_names, image_sizes):
-            true_image = cv2.imread(image_name)
-            true_image = self.resize(true_image, imsize=self.imsize)
-
-            pred_image = cv2.imread(image_name)
-            pred_image = self.resize(pred_image, imsize=self.imsize)
+        for text_mask, kernel_mask, pred_boxes, true_boxes, image_name, image in zip(text_masks, kernel_masks, pred_boxes, trues_boxes, image_names, images):
+            true_image = image.copy()
+            pred_image = image.copy()
 
             for box in true_boxes:
+                # points = [[point[0] * f, point[1] * f] for point in box['points']]
                 self.draw_polygon(image=true_image, points=box['points'], color=(0, 255, 0))
             cv2.imwrite(str(self.output_dir.joinpath(f'{Path(image_name).stem}_gt{Path(image_name).suffix}')), true_image)
 
             for box in pred_boxes:
+                # points = [[point[0] * f, point[1] * f] for point in box['points']]
                 self.draw_polygon(image=pred_image, points=box['points'], color=(0, 0, 255))
             cv2.imwrite(str(self.output_dir.joinpath(f'{Path(image_name).stem}_pred{Path(image_name).suffix}')), pred_image)
+            cv2.imwrite(str(self.output_dir.joinpath(f'{Path(image_name).stem}_text{Path(image_name).suffix}')), text_mask * 255)
+            cv2.imwrite(str(self.output_dir.joinpath(f'{Path(image_name).stem}_mask{Path(image_name).suffix}')), kernel_mask * 255)
 
     def compute(self):
         pass
@@ -71,13 +77,6 @@ class Predictor(Module):
             engine.add_event_handler(Events.EPOCH_STARTED, self.started)
         if not engine.has_event_handler(self.iteration_completed, Events.ITERATION_COMPLETED):
             engine.add_event_handler(Events.ITERATION_COMPLETED, self.iteration_completed)
-
-    def resize(self, image: np.ndarray, imsize: int = 640) -> np.ndarray:
-        f = imsize / min(image.shape[:2])
-        image = iaa.Resize(size=f)(image=image)
-        image = iaa.CropToFixedSize(width=imsize, height=imsize, position='center')(image=image)
-
-        return image
 
     def draw_polygon(
         self,

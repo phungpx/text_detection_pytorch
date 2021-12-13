@@ -19,3 +19,23 @@ PANNet:
     device: '''cpu'''
     mean: (0., 0., 0.)
     std: (1., 1., 1.)
+
+myPANNet:
+  module: modules.PANNet.detector
+  class: Detector
+  Detector:
+    model:
+      module: models.definitions.myPANNet.PAN_net
+      class: PANNet
+      PANNet:
+        backbone_name: '''resnet18'''
+        backbone_pretrained: False
+        num_FPEMs: 2
+    weight_path: '''models/weights/myPANNet/2112101524/best_model_405_pan_loss=-0.4728.pt'''
+    binary_threshold: 0.5
+    imsize: 760
+    shrink_ratio: 0.5
+    batch_size: 1
+    device: '''cpu'''
+    mean: (0., 0., 0.)
+    std: (1., 1., 1.)

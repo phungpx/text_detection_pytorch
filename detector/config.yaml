@@ -2,7 +2,7 @@ PANNet:
   module: modules.PANNet.detection
   class: Detection
   Detection:
-    mode: '''PANNet'''
+    mode: '''myPANNet'''
 
 CRAFT:
   module: modules.CRAFT.detection

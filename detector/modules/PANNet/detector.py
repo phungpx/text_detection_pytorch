@@ -45,7 +45,8 @@ class Detector(Processor):
         self.std = torch.tensor(std, dtype=torch.float32, device=device).reshape(1, 3, 1, 1)  # B, C, H, W
         self.mean = torch.tensor(mean, dtype=torch.float32, device=device).reshape(1, 3, 1, 1)  # B, C, H, W
 
-        state_dict = torch.load(f=utils.abs_path(weight_path), map_location='cpu')['state_dict']
+        state_dict = torch.load(f=utils.abs_path(weight_path), map_location='cpu')
+        # state_dict = torch.load(f=utils.abs_path(weight_path), map_location='cpu')['state_dict']
         self.model.load_state_dict(state_dict=state_dict)
         self.model.eval().to(device)
 
@@ -127,7 +128,7 @@ class Detector(Processor):
         offseter = pyclipper.PyclipperOffset()
 
         poly = Polygon(points)
-        d = poly.area * (1 + r) / poly.length
+        d = poly.area * (1 + r ** 2) / poly.length
 
         points = [tuple(point) for point in points]
         offseter.AddPath(points, pyclipper.JT_ROUND, pyclipper.ET_CLOSEDPOLYGON)

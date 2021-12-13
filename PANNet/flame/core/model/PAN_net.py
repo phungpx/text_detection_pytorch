@@ -57,17 +57,17 @@ class PANNet(nn.Module):
             preds = self.forward(x)  # N x 6 x H x W
             preds[:2, :, :] = nn.Sigmoid()(preds[:2, :, :])
 
-        images_boxes = []
+        results = []
         for pred in torch.split(preds, split_size_or_sections=1, dim=0):
             pred = pred.squeeze(dim=0).cpu().numpy()  # 6 x H x W
-            image_boxes = self.get_boxes(pred=pred)
-            images_boxes.append(image_boxes)
+            result = self.get_prediction(pred=pred)
+            results.append(result)
 
-        return images_boxes
+        return results
 
-    def get_boxes(
+    def get_prediction(
         self, pred: np.ndarray, fx: float = 1, fy: float = 1, min_area: int = 5
-    ) -> List[List[Tuple[float, float]]]:
+    ) -> dict:
         text_region = pred[0] > self.binary_threshold  # text region
         kernel = (pred[1] > self.binary_threshold) * text_region  # kernel of text region
 
@@ -95,7 +95,13 @@ class PANNet(nn.Module):
 
             boxes.append({'points': box, 'text': None, 'ignore': False})
 
-        return boxes
+        prediction = {
+            'text_mask': text_region.astype(np.uint8),
+            'kernel_mask': kernel.astype(np.uint8),
+            'text_boxes': boxes
+        }
+
+        return prediction
 
     def unshrink_polygon(self, points: List[Tuple[float, float]], r: float = 0.5) -> List[List[Tuple[float, float]]]:
         offseter = pyclipper.PyclipperOffset()

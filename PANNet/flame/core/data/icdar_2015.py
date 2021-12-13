@@ -76,6 +76,7 @@ class ICDAR2015(Dataset):
             label = json.load(f)
 
         image_info = {
+            'image': None,
             'image_path': str(image_path),
             'image_size': image.shape[1::-1],
             'text_boxes': None,
@@ -88,6 +89,7 @@ class ICDAR2015(Dataset):
             image, label = self.augmenter.apply(image=image, label=label, augmenter=require_transform)
 
         image, label = self.resize(image=image, label=label, imsize=self.imsize)
+        image_info['image'] = image
 
         text_map, kernel_map, effective_map, text_boxes = self.generate_map(image=image, label=label)
         image_info['text_boxes'] = text_boxes  # save for evaluation
@@ -103,17 +105,16 @@ class ICDAR2015(Dataset):
 
         return image, mask, effective_map, image_info
 
-    def resize(self, image, label, imsize=640):
+    def resize(self, image: np.ndarray, label: dict, imsize: int = 640) -> Tuple[np.ndarray, dict]:
         f = imsize / min(image.shape[:2])
 
         image, label = self.augmenter.apply(
-            image=image, label=label,
-            augmenter=iaa.Resize(size=f)
+            image=image, label=label, augmenter=iaa.Resize(size=f)
         )
 
         image, label = self.augmenter.apply(
             image=image, label=label,
-            augmenter=iaa.CropToFixedSize(width=imsize, height=imsize, position='center')
+            augmenter=iaa.CropToFixedSize(width=imsize, height=imsize, position='uniform')
         )
 
         return image, label
