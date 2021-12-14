@@ -101,7 +101,7 @@ class ICDAR2015(Dataset):
 
         return image, mask, effective_map, image_info
 
-    # def resize(self, image: np.ndarray, label: dict, imsize: int = 640) -> Tuple[np.ndarray, dict]:
+    # def crop_to_square(self, image: np.ndarray, label: dict, imsize: int = 640) -> Tuple[np.ndarray, dict]:
     #     f = imsize / min(image.shape[:2])
 
     #     image, label = self.augmenter.apply(

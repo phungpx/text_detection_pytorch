@@ -10,8 +10,8 @@ data:
           dirnames:
             - '''../dataset/incidental_scene_text_2015/train/'''
           imsize: 640
-          mean: '(0., 0., 0.)'
-          std: '(1., 1., 1.)'
+          mean: '(0.485, 0.456, 0.406)'
+          std: '(0.229, 0.224, 0.225)'
           shrink_ratio: 0.5
           max_shrink: 20
           ignore_blur_text: True
@@ -36,7 +36,7 @@ data:
           # require_transforms:
             # - iaa.Affine(rotate=(0, 20), shear=(-10, 10), fit_output=True)
             # - iaa.PerspectiveTransform(scale=(0, 0.1))
-      batch_size: 16
+      batch_size: 32
       shuffle: True
       pin_memory: True
       num_workers: 12
@@ -54,14 +54,14 @@ data:
           dirnames:
             - '''../dataset/incidental_scene_text_2015/train/'''
           imsize: 640
-          mean: '(0., 0., 0.)'
-          std: '(1., 1., 1.)'
+          mean: '(0.485, 0.456, 0.406)'
+          std: '(0.229, 0.224, 0.225)'
           shrink_ratio: 0.5
           max_shrink: 20
           ignore_blur_text: True
           image_extents: ['''.jpg''', '''.png''', '''.jpeg''', '''.JPG''', '''.PNG''', '''.JPEG''']
           label_extent: '''.json'''
-      batch_size: 16
+      batch_size: 32
       shuffle: False
       pin_memory: True
       num_workers: 12
@@ -79,14 +79,14 @@ data:
           dirnames:
             - '''../dataset/incidental_scene_text_2015/test/'''
           imsize: 640
-          mean: '(0., 0., 0.)'
-          std: '(1., 1., 1.)'
+          mean: '(0.485, 0.456, 0.406)'
+          std: '(0.229, 0.224, 0.225)'
           shrink_ratio: 0.5
           max_shrink: 20
           ignore_blur_text: True
           image_extents: ['''.jpg''', '''.png''', '''.jpeg''', '''.JPG''', '''.PNG''', '''.JPEG''']
           label_extent: '''.json'''
-      batch_size: 16
+      batch_size: 32
       shuffle: False
       pin_memory: True
       num_workers: 12
@@ -229,7 +229,7 @@ backup_saver:
     n_saved: 1
 
 engine:
-  module: flame.core.engine.engine
+  module: flame.core.engine.trainer
   class: Trainer
   Trainer:
     dataset: config['data']['train']

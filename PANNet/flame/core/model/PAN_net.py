@@ -105,11 +105,13 @@ class PANNet(nn.Module):
 
             boxes.append({'points': box, 'text': None, 'ignore': False})
 
-        image_boxes = {
-            'text_mask': cv2.resize((pred[0] * 255).astype(np.uint8), dsize=image_size)[:image_size[1], :image_size[0]],
-            'kernel_mask': cv2.resize((pred[1] * 255).astype(np.uint8), dsize=image_size)[:image_size[1], :image_size[0]],
-            'boxes': boxes,
-        }
+        text_mask = np.stack([(pred[0] * 255).astype(np.uint8)] * 3, axis=2)
+        text_mask = cv2.resize(text_mask, dsize=image_size)[:image_size[1], :image_size[0]]
+
+        kernel_mask = np.stack([(pred[1] * 255).astype(np.uint8)] * 3, axis=2)
+        kernel_mask = cv2.resize(kernel_mask, dsize=image_size)[:image_size[1], :image_size[0]]
+
+        image_boxes = {'text_mask': text_mask, 'kernel_mask': kernel_mask, 'boxes': boxes}
 
         return image_boxes
 
