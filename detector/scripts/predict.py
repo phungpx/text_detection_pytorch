@@ -100,7 +100,7 @@ if __name__ == '__main__':
     parser.add_argument('image_path', type=str, help='image dir.')
     parser.add_argument('--output-dir', type=str, help='path to save image')
     parser.add_argument('--pattern', type=str, help='glob pattern if image_path is a dir.')
-    parser.add_argument('--mode', type=str, default='DB')
+    parser.add_argument('--mode', type=str, default='PANNet')
     parser.add_argument('--start-index', type=int, default=1)
     args = parser.parse_args()
 
@@ -138,15 +138,37 @@ if __name__ == '__main__':
             
         for i, doc_info in enumerate(doc_infos):
             image = doc_info.image
-            for word in doc_info.words:
-                points = np.int32([[point.x, point.y] for point in word.box])
-                title = f"{word.field}: {word.confidence:.4f}" if word.field else None
+            text_mask = np.stack([doc_info.text_mask] * 3, axis=2)
+            kernel_mask = np.stack([doc_info.kernel_mask] * 3, axis=2)
+
+            for field in doc_info.info:
+                points = np.int32([[point.x, point.y] for point in field.box])
+                title = f"{field.field}: {field.confidence:.4f}" if field.field else None
+
                 draw_polygon(
                     image=image, points=points,
-                    title=title, color=colors.get(word.field, (0, 255, 0)),
+                    title=title, color=colors.get(field.field, (0, 255, 0)),
+                    title_position='top_left',
+                )
+
+                draw_polygon(
+                    image=text_mask, points=points,
+                    title=title, color=colors.get(field.field, (0, 255, 0)),
+                    title_position='top_left',
+                )
+
+                draw_polygon(
+                    image=kernel_mask, points=points,
+                    title=title, color=colors.get(field.field, (0, 255, 0)),
                     title_position='top_left',
                 )
 
             image_name = f'{image_path.stem}_{i}'
+
             image = np.ascontiguousarray(image, dtype=np.uint8)
+            text_mask = np.ascontiguousarray(text_mask, dtype=np.uint8)
+            kernel_mask = np.ascontiguousarray(kernel_mask, dtype=np.uint8)
+
             cv2.imwrite(str(output_dir.joinpath(f'{image_name}{image_path.suffix}')), image)
+            cv2.imwrite(str(output_dir.joinpath(f'{image_name}_text{image_path.suffix}')), text_mask)
+            cv2.imwrite(str(output_dir.joinpath(f'{image_name}_kernel{image_path.suffix}')), kernel_mask)

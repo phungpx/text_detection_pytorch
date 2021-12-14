@@ -95,11 +95,11 @@ class PANNet(nn.Module):
             if Polygon(box).area < area_threshold:
                 continue
 
-            unshrunk_boxes = self.unshrunk_box(box, r=self.shrink_ratio) 
-            if not len(unshrunk_boxes):
+            shrunk_boxes = self.shrunk_box(box, r=self.shrink_ratio) 
+            if not len(shrunk_boxes):
                 continue
 
-            box = self.order_points(unshrunk_boxes[0])
+            box = self.order_points(shrunk_boxes[0])
             box = [(int(round(x * fx)), int(round(y * fy))) for x, y in box]
 
             boxes.append({'points': box, 'text': None, 'ignore': False})
@@ -112,7 +112,7 @@ class PANNet(nn.Module):
 
         return image_boxes
 
-    def unshrunk_box(self, points: List[Tuple[float, float]], r: float = 0.5) -> List[List[Tuple[float, float]]]:
+    def shrunk_box(self, points: List[Tuple[float, float]], r: float = 0.5) -> List[List[Tuple[float, float]]]:
         offseter = pyclipper.PyclipperOffset()
 
         poly = Polygon(points)

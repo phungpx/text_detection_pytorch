@@ -33,7 +33,6 @@ class ICDAR2015(Dataset):
     ) -> None:
         super(ICDAR2015, self).__init__()
         self.imsize = imsize
-        self.augmenter = Augmenter()
         self.max_shrink = max_shrink
         self.shrink_ratio = shrink_ratio
         self.ignore_blur_text = ignore_blur_text
@@ -42,6 +41,8 @@ class ICDAR2015(Dataset):
 
         self.mean = torch.tensor(mean, dtype=torch.float).view(3, 1, 1)  # 3 x 1 x 1
         self.std = torch.tensor(std, dtype=torch.float).view(3, 1, 1)  # 3 x 1 x 1
+
+        self.augmenter = Augmenter()
 
         image_paths, label_paths = [], []
         for dirname in dirnames:
@@ -61,8 +62,7 @@ class ICDAR2015(Dataset):
         return len(self.data_pairs)
 
     def __getitem__(self, idx):
-        '''
-        Returns:
+        '''Returns:
             image (Float32Tensor): 3 x H x W, normalized sample (image / 255 - mean) / std
             mask (Float32Tensor): 2 x H x W, combination of kernel map and text map
             effective_mask (Uint8Tensor): H x W, mask with ignored text region with blur text

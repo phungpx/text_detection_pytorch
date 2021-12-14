@@ -54,8 +54,8 @@ class Predictor(Module):
                 # points = [[point[0] * f, point[1] * f] for point in box['points']]
                 self.draw_polygon(image=pred_image, points=box['points'], color=(0, 0, 255))
             cv2.imwrite(str(self.output_dir.joinpath(f'{Path(image_name).stem}_pred{Path(image_name).suffix}')), pred_image)
-            cv2.imwrite(str(self.output_dir.joinpath(f'{Path(image_name).stem}_text{Path(image_name).suffix}')), text_mask * 255)
-            cv2.imwrite(str(self.output_dir.joinpath(f'{Path(image_name).stem}_mask{Path(image_name).suffix}')), kernel_mask * 255)
+            cv2.imwrite(str(self.output_dir.joinpath(f'{Path(image_name).stem}_text{Path(image_name).suffix}')), text_mask)
+            cv2.imwrite(str(self.output_dir.joinpath(f'{Path(image_name).stem}_mask{Path(image_name).suffix}')), kernel_mask)
 
     def compute(self):
         pass

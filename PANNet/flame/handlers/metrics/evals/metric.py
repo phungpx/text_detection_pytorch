@@ -29,6 +29,7 @@ class HMean(Metric):
         '''
         pred_boxes, _, _, image_infos = output
         true_boxes = [image_info['text_boxes'] for image_info in image_infos]
+        pred_boxes = [pred_box['text_boxes'] for pred_box in pred_boxes]
 
         self.trues.extend(true_boxes)
         self.preds.extend(pred_boxes)
