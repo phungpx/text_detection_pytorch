@@ -78,7 +78,8 @@ class PANNet(nn.Module):
         kernel = (pred[1] > self.score_threshold) * text_region  # kernel of text region
 
         num_labels, label = cv2.connectedComponents(kernel.astype(np.uint8), connectivity=4)
-        fx, fy = image_size[0] / pred.shape[2], image_size[1] / pred.shape[1]
+        # fx, fy = image_size[0] / pred.shape[2], image_size[1] / pred.shape[1]
+        fx = fy = max(image_size) / pred.shape[1]
 
         boxes = []
         for i in range(1, num_labels):
@@ -105,9 +106,9 @@ class PANNet(nn.Module):
             boxes.append({'points': box, 'text': None, 'ignore': False})
 
         image_boxes = {
-            'text_mask': cv2.resize((pred[0] * 255).astype(np.uint8), dsize=image_size),
-            'kernel_mask': cv2.resize((pred[1] * 255).astype(np.uint8), dsize=image_size),
-            'text_boxes': boxes,
+            'text_mask': cv2.resize((pred[0] * 255).astype(np.uint8), dsize=image_size)[:image_size[1], :image_size[0]],
+            'kernel_mask': cv2.resize((pred[1] * 255).astype(np.uint8), dsize=image_size)[:image_size[1], :image_size[0]],
+            'boxes': boxes,
         }
 
         return image_boxes

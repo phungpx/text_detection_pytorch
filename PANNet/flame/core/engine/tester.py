@@ -52,6 +52,7 @@ class Evaluator(Engine):
             params[1] = torch.stack([masks.to(self.device) for masks in params[1]], dim=0)  # N x 2 x H x W
             params[2] = torch.stack([eff_map.to(self.device) for eff_map in params[2]], dim=0)  # N x H x W
 
-            params[0] = self.model.predict(params[0])
+            image_sizes = [tuple(image_info['image_size']) for image_info in params[3]]
+            params[0] = self.model.predict(x=params[0], image_sizes=image_sizes)
 
             return params

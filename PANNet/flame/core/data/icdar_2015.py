@@ -76,10 +76,9 @@ class ICDAR2015(Dataset):
             label = json.load(f)
 
         image_info = {
-            'image': None,
             'image_path': str(image_path),
             'image_size': image.shape[1::-1],
-            'text_boxes': None,
+            'boxes': self.get_boxes(label),
         }
 
         for transform in random.sample(self.transforms, k=random.randint(0, len(self.transforms))):
@@ -88,11 +87,8 @@ class ICDAR2015(Dataset):
         for require_transform in self.require_transforms:
             image, label = self.augmenter.apply(image=image, label=label, augmenter=require_transform)
 
-        image, label = self.resize(image=image, label=label, imsize=self.imsize)
-        image_info['image'] = image
-
-        text_map, kernel_map, effective_map, text_boxes = self.generate_map(image=image, label=label)
-        image_info['text_boxes'] = text_boxes  # save for evaluation
+        image, label = self.pad_to_square(image=image, label=label, imsize=self.imsize)
+        text_map, kernel_map, effective_map = self.generate_map(image=image, label=label)
 
         image = torch.from_numpy(np.ascontiguousarray(image))  # H x W x 3, tensor.uint8
         text_map = torch.from_numpy(np.ascontiguousarray(text_map))  # H x W, tensor.uint8
@@ -105,8 +101,22 @@ class ICDAR2015(Dataset):
 
         return image, mask, effective_map, image_info
 
-    def resize(self, image: np.ndarray, label: dict, imsize: int = 640) -> Tuple[np.ndarray, dict]:
-        f = imsize / min(image.shape[:2])
+    # def resize(self, image: np.ndarray, label: dict, imsize: int = 640) -> Tuple[np.ndarray, dict]:
+    #     f = imsize / min(image.shape[:2])
+
+    #     image, label = self.augmenter.apply(
+    #         image=image, label=label, augmenter=iaa.Resize(size=f)
+    #     )
+
+    #     image, label = self.augmenter.apply(
+    #         image=image, label=label,
+    #         augmenter=iaa.CropToFixedSize(width=imsize, height=imsize, position='uniform')
+    #     )
+
+    #     return image, label
+
+    def pad_to_square(self, image: np.ndarray, label: dict, imsize: int = 640) -> Tuple[np.ndarray, dict]:
+        f = imsize / max(image.shape[:2])
 
         image, label = self.augmenter.apply(
             image=image, label=label, augmenter=iaa.Resize(size=f)
@@ -114,21 +124,14 @@ class ICDAR2015(Dataset):
 
         image, label = self.augmenter.apply(
             image=image, label=label,
-            augmenter=iaa.CropToFixedSize(width=imsize, height=imsize, position='uniform')
+            augmenter=iaa.PadToSquare(position='right-bottom')
         )
 
         return image, label
 
-    def generate_map(
-        self, image: np.ndarray, label: dict
-    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, List[dict]]:
-        height, width = image.shape[:2]
-
-        text_map = np.zeros(shape=(height, width), dtype=np.uint8)
-        kernel_map = np.zeros(shape=(height, width), dtype=np.uint8)
-
-        text_id = 0
-        text_boxes = []
+    def get_boxes(self, label: dict) -> List[dict]:
+        boxes = []
+        height, width = label['imageHeight'], label['imageWidth']
         for shape in label['shapes']:
             if shape['shape_type'] == 'rectangle':
                 points = self.to_4points(shape['points'])
@@ -142,13 +145,38 @@ class ICDAR2015(Dataset):
                 continue
 
             # get text boxes after transformers for evaluation
-            text_box = {
+            box = {
                 'points': points,
                 'text': shape.get('value', '###'),
-                'ignore': True if shape.get('value', '###') == '###' else False,
+                'ignore': False,
             }
-            if not self.ignore_blur_text:
-                text_box['ignore'] = False
+
+            if self.ignore_blur_text and (box['text'] == '###'):
+                box['ignore'] = True
+
+            boxes.append(box)
+
+        return boxes
+
+    def generate_map(self, image: np.ndarray, label: dict) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        height, width = image.shape[:2]
+
+        text_map = np.zeros(shape=(height, width), dtype=np.uint8)
+        kernel_map = np.zeros(shape=(height, width), dtype=np.uint8)
+
+        text_id = 0
+        ignored_polys = []
+        for shape in label['shapes']:
+            if shape['shape_type'] == 'rectangle':
+                points = self.to_4points(shape['points'])
+            elif shape['shape_type'] == 'polygon':
+                points = shape['points']
+            else:
+                continue
+
+            points = self.to_valid_poly(points, image_height=height, image_width=width)
+            if not Polygon(points).is_valid:
+                continue
 
             # text region map
             cv2.fillPoly(img=text_map, pts=[np.int32(points)], color=text_id + 1)
@@ -157,15 +185,15 @@ class ICDAR2015(Dataset):
             shrunk_polygons = self.shrink_polygon(points, r=self.shrink_ratio, max_shrink=self.max_shrink)
             cv2.fillPoly(img=kernel_map, pts=np.int32(shrunk_polygons), color=text_id + 1)
 
+            # get ignored text regions
+            if self.ignore_blur_text and (shape.get('value', '###') == '###'):
+                ignored_polys.append(points)
+
             text_id += 1
-            text_boxes.append(text_box)
 
-        ignored_polys = [text_box['points'] for text_box in text_boxes if text_box['ignore']]
-        effective_map = self.generate_effective_map(
-            mask_height=height, mask_width=width, ignored_polys=ignored_polys
-        )
+        effective_map = self.generate_effective_map(mask_height=height, mask_width=width, ignored_polys=ignored_polys)
 
-        return text_map, kernel_map, effective_map, text_boxes
+        return text_map, kernel_map, effective_map
 
     def to_valid_poly(
         self, polygon: List[Tuple[float, float]], image_height: int, image_width: int

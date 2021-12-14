@@ -31,8 +31,9 @@ model:
     backbone_name: '''resnet18'''
     backbone_pretrained: False
     num_FPEMs: 2
-    binary_threshold: 0.5
     shrink_ratio: 0.5
+    score_threshold: 0.5
+    area_threshold: 0.
 
 metrics:
   module: flame.handlers.metrics.metrics
@@ -58,7 +59,7 @@ checkpoint_loader:
   module: flame.handlers.checkpoint
   class: CheckpointLoader
   CheckpointLoader:
-    checkpoint_path: '''checkpoint/incidental_scene_text_2015/2112091422/best_model_51_pan_loss=-0.5370.pt'''
+    checkpoint_path: '''checkpoint/incidental_scene_text_2015/2112101524/best_model_405_pan_loss=-0.4728.pt'''
     mode: '''test'''
 
 predictor:
@@ -67,7 +68,7 @@ predictor:
   Predictor:
     evaluator_name: '''engine'''
     imsize: 640
-    output_dir: '''checkpoint/incidental_scene_text_2015/2112091422/best_model_51_pan_loss=-0.5370/test/'''
+    output_dir: '''checkpoint/incidental_scene_text_2015/2112101524/best_model_405_pan_loss=-0.4728/test/'''
     output_transform: 'lambda x: (x[0], x[-1])'
 
 engine:
