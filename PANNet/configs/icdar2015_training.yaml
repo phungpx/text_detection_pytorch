@@ -9,7 +9,7 @@ data:
         ICDAR2015:
           dirnames:
             - '''../dataset/incidental_scene_text_2015/train/'''
-          imsize: 640
+          imsize: 736
           mean: '(0.485, 0.456, 0.406)'
           std: '(0.229, 0.224, 0.225)'
           shrink_ratio: 0.5
@@ -36,7 +36,7 @@ data:
           # require_transforms:
             # - iaa.Affine(rotate=(0, 20), shear=(-10, 10), fit_output=True)
             # - iaa.PerspectiveTransform(scale=(0, 0.1))
-      batch_size: 32
+      batch_size: 16
       shuffle: True
       pin_memory: True
       num_workers: 12
@@ -53,7 +53,7 @@ data:
         ICDAR2015:
           dirnames:
             - '''../dataset/incidental_scene_text_2015/train/'''
-          imsize: 640
+          imsize: 736
           mean: '(0.485, 0.456, 0.406)'
           std: '(0.229, 0.224, 0.225)'
           shrink_ratio: 0.5
@@ -61,7 +61,7 @@ data:
           ignore_blur_text: True
           image_extents: ['''.jpg''', '''.png''', '''.jpeg''', '''.JPG''', '''.PNG''', '''.JPEG''']
           label_extent: '''.json'''
-      batch_size: 32
+      batch_size: 16
       shuffle: False
       pin_memory: True
       num_workers: 12
@@ -78,7 +78,7 @@ data:
         ICDAR2015:
           dirnames:
             - '''../dataset/incidental_scene_text_2015/test/'''
-          imsize: 640
+          imsize: 736
           mean: '(0.485, 0.456, 0.406)'
           std: '(0.229, 0.224, 0.225)'
           shrink_ratio: 0.5
@@ -86,7 +86,7 @@ data:
           ignore_blur_text: True
           image_extents: ['''.jpg''', '''.png''', '''.jpeg''', '''.JPG''', '''.PNG''', '''.JPEG''']
           label_extent: '''.json'''
-      batch_size: 32
+      batch_size: 16
       shuffle: False
       pin_memory: True
       num_workers: 12
@@ -109,18 +109,28 @@ model:
   module: flame.core.model.PAN_net
   class: PANNet
   PANNet:
-    backbone_name: '''resnet18'''
+    backbone_name: '''resnet34'''
     backbone_pretrained: True
     num_FPEMs: 2
 
+# optim:
+#   module: torch.optim
+#   class: Adam
+#   Adam:
+#     params: config['model'].parameters()
+#     lr: 0.001
+#     weight_decay: 0.0
+#     amsgrad: True
+
 optim:
   module: torch.optim
-  class: Adam
-  Adam:
+  class: SGD
+  SGD:
     params: config['model'].parameters()
-    lr: 0.001
-    weight_decay: 0.
-    amsgrad: True
+    lr: 0.01
+    momentum: 0.99
+    weight_decay: 0.0005
+    nesterov: True
 
 train_evaluator:
   module: flame.handlers.metric_evaluator
